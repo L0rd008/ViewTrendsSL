@@ -1,314 +1,858 @@
-=======SRS=======
+# ViewTrendsSL: YouTube Viewership Forecasting System
+## Software Requirements Specification (SRS)
+
+**Document Version**: 1.0  
+**Date**: August 6, 2025  
+**Course**: In22-S5-CS3501 - Data Science and Engineering Project  
+**Institution**: University of Moratuwa  
+
+**Prepared by:**
+- Senevirathne S.M.P.U. (220599M) - Data Lead
+- Sanjula N.G.K. (220578A) - Backend & Model Lead  
+- Shaamma M.S. (220602U) - Frontend & Documentation Lead
+
+---
+
+## Table of Contents
+
+1. [Introduction](#1-introduction)
+2. [Overall Description](#2-overall-description)
+3. [System Features](#3-system-features)
+4. [External Interface Requirements](#4-external-interface-requirements)
+5. [Non-Functional Requirements](#5-non-functional-requirements)
+6. [Other Requirements](#6-other-requirements)
+7. [Appendices](#7-appendices)
+
+---
 
 ## 1. Introduction
 
 ### 1.1 Purpose
 
-4. Who is the intended audience of this document? (e.g., developers, clients, testers, stakeholders)
-YouTubers, Influencers, Creators, Producers, Artists, Media Channels, etc
-5. Is this document limited to the forecasting module only or the full system (including dashboard, backend, etc.)?
-It's intended to be a hosted full system with frontend dashboard for forecasting, backend and DB. But the most important part is the forecasting module. There are intentions to publish this system as a product, create a research paper, and develop a useful dataset.
+This Software Requirements Specification (SRS) document provides a comprehensive description of the ViewTrendsSL system - a machine learning-powered web application for predicting YouTube video viewership specifically for Sri Lankan audiences. This document serves as the definitive specification for system development, testing, and evaluation.
 
-### 1.2 Scope
+**Intended Audience:**
+- Development team members
+- Project mentors and academic evaluators
+- System testers and quality assurance personnel
+- Future maintainers and contributors
+- Academic researchers and stakeholders
 
-6. What are the boundaries of the system? What is explicitly included and excluded?
-Forecasting view counts for Sri Lankan videos before uploading. However, it could also be used for international videos, as the features that distinguish a Sri Lankan video from an international video might not have a significant impact on the view count of a video. Can forecast for upto 6 months for a video (based on "A YouTube video's view count typically plateaus within 2-4 months for smaller channels and 2 weeks for larger channels."). So, data collection might need data from at least 6 months(could be different for shorts and long-form as they take separate times to complete the sudden view spike and to plateau. If we can analyse the trends/gradients of the two separate parts of videos: sudden initial spike, and plateau, prediction would be easy. But a remark, the only view-time graph is not spike then plateau, there are many more, and it would be better if we can recognize and analyse them also. it's(spike then plateau) just the most common. even that too differs in how they behave among long form and short form videos). To reduce the bias of the differences/updates to the YT algorithm over the years, we can collect at least 6 months of data of a few years. System should analyse the transcript of the video to be uploaded, content of the video, thumbnail of the video, length of the video, content type of the video, word count per minute, audio analysis, shot switch rate, etc. and give suggestions for optimal performance. For this the ML should be trained on the above mentioned features and more. (We might need many other APIs)
+**Document Scope:**
+This SRS covers the complete ViewTrendsSL system including:
+- Data collection and processing subsystem
+- Machine learning prediction engine
+- Web-based user interface
+- Database management system
+- API services and external integrations
 
-Also we could be able to use social blade to identify top channels by country. Even though current predicions are based for Sri Lanka, we might be able to make it general(global), and then specialize to other countries. or specialize it to large/small(views) channels, or long/short videos, or channel category wise, or channel view count wise.
+### 1.2 Product Scope
 
-Real time data collection(daily) to train and update the ML with latest data. Trending Keywords(among similar channels), personalized video ideas(ideal length range/ ideal title keywords/ ideal description approaches/etc. Competitor/Subscriber analysis, trend alerts, channel audit tool, SEO, keyword research, thumbnail suggestions, video suggestions). All of these should be personalized, Graph view prediction with many data points. Channel analytics, projections(view/monetary), similar channels...
+**Product Overview:**
+ViewTrendsSL is a specialized analytics platform that addresses the critical gap in region-specific YouTube viewership prediction tools. The system leverages cutting-edge machine learning research to provide accurate forecasting capabilities tailored to Sri Lankan audience behavior and content consumption patterns.
 
-These above features should be thoroughly analysed and considered to make a good plan since the MVP is done by three uni undergrads within 3 months. We can include the harder to implement features in future plans docs. 
-Your ambition is fantastic, but for a 3-month project, scope is your most important constraint. You need to define a clear boundary between the Minimum Viable Product (MVP) and future versions.
+**Primary Objectives:**
+- Provide accurate viewership predictions for YouTube videos at 24-hour, 7-day, and 30-day intervals
+- Deliver region-specific insights based on Sri Lankan audience data
+- Offer an intuitive web-based interface for content creators and marketers
+- Establish a foundation for academic research in regional social media analytics
 
-Explicitly INCLUDED in MVP Scope:
+**Key Benefits:**
+- **For Content Creators**: Data-driven content strategy optimization
+- **For Marketers**: Improved campaign planning and budget allocation
+- **For Researchers**: Novel dataset and methodology for regional analytics
+- **For Industry**: Foundation for specialized social media tools
 
-Data Collection: Fetching video metadata (title, duration, category, tags, stats) for a curated list of Sri Lankan channels using the YouTube Data API v3.
-
-Data Storage: Storing this data in a local SQLite database.
-
-Core Models: Training separate regression models (e.g., XGBoost) for Shorts and Long-form videos.
-
-Forecasting: Predicting the view count at three key milestones: 24 hours, 7 days, and 30 days.
-
-User Interface: A simple web page where a user can input a YouTube video URL.
-
-Output: Displaying a graph showing the predicted view curve based on the 3 milestone predictions.
-
-Explicitly EXCLUDED from MVP Scope (for "Future Work" section):
-
-Transcript, audio, and thumbnail image analysis.
-
-Real-time, continuous data collection and model retraining.
-
-SEO tools, keyword research, competitor analysis, and personalized suggestions.
-
-Monetary projections and channel auditing tools.
-7. What features will be available in the MVP?
-Graph view prediction with many data points.
-The "Graph view prediction" feature will be composed of:
-
-Input: A text box where a user pastes the URL of a YouTube video.
-
-Processing: The backend fetches the video's initial metadata (title, duration, category, channel stats).
-
-Prediction: The system feeds these features into the appropriate pre-trained model (Shorts or Long-form) to get view count predictions for 24 hours, 7 days, and 30 days.
-
-Output: The UI displays a line chart. The line starts at the video's current view count and extends into the future, plotting the predicted points at the 24h, 7d, and 30d marks to create a "growth curve."
-8. Will the system work only for Sri Lankan creators or have optional generalization?
-Intended for sri lankans, but as a business its better to target general/global user. so, there are plans to expnd. (could be channel country wise/ channel category wise/ channel subscriber wise/or channel view count wise)
 ### 1.3 Definitions, Acronyms, and Abbreviations
 
-9. List all domain-specific terms (e.g., API, RMSE, Prophet, Streamlit, “viewership curve”).
-IDK what this is but  API, RMSE, Prophet, Streamlit, “viewership curve" are domain specific terms, yes.
+**Technical Terms:**
+- **API (Application Programming Interface)**: Set of protocols enabling software component communication
+- **ETL (Extract, Transform, Load)**: Data processing pipeline for collection, cleaning, and storage
+- **Feature Engineering**: Process of creating predictive variables from raw data
+- **MAPE (Mean Absolute Percentage Error)**: Prediction accuracy metric expressed as percentage
+- **MAE (Mean Absolute Error)**: Average magnitude of prediction errors
+- **RMSE (Root Mean Squared Error)**: Standard deviation of prediction residuals
+- **SRC (Spearman Rank Correlation)**: Statistical measure of monotonic relationship strength
+- **XGBoost**: Extreme Gradient Boosting machine learning algorithm
+- **Viewership Curve**: Temporal visualization of video view count progression
 
-Here’s a starter list you can use and expand upon:
+**Domain-Specific Terms:**
+- **Shorts**: YouTube videos with duration ≤ 60 seconds
+- **Long-form**: YouTube videos with duration > 60 seconds
+- **Channel Authority**: Composite metric of channel influence and reach
+- **Early Engagement**: User interactions within first 24 hours of video publication
+- **Temporal Alignment**: Time-synchronized prediction methodology
+- **Growth Velocity**: Rate of viewership increase during initial publication period
 
-API (Application Programming Interface): A set of rules and protocols that allows different software applications to communicate with each other. We use the YouTube Data API.
-
-ETL (Extract, Transform, Load): The process of collecting data from a source (YouTube), cleaning and transforming it, and loading it into a database.
-
-Feature Engineering: The process of creating new input variables (features) for a model from the raw data (e.g., creating day_of_week from publish_time).
-
-Regression Model: A type of machine learning model that predicts a continuous numerical value, such as view_count.
-
-RMSE (Root Mean Squared Error): A metric used to measure the average magnitude of error in a regression model's predictions.
-
-MAPE (Mean Absolute Percentage Error): A metric that measures prediction accuracy as a percentage, making it easy to interpret.
-
-Viewership Curve: A line graph that plots the cumulative view count of a video over time.
+**System Components:**
+- **Data Collector**: Automated YouTube API integration module
+- **Feature Extractor**: Data preprocessing and feature engineering component
+- **Prediction Engine**: Machine learning model inference system
+- **Web Dashboard**: User interface for prediction requests and visualization
+- **Database Manager**: Data storage and retrieval system
 
 ### 1.4 References
 
-10. List any:
+**Academic Literature:**
+1. "AMPS: Predicting popularity of short-form videos using multi-modal attention mechanisms" - Journal of Retailing and Consumer Services (2024)
+2. "SMTPD: A New Benchmark for Temporal Prediction of Social Media Popularity" - arXiv:2503.04446v1 (2025)
+3. "XGBoost: A Scalable Tree Boosting System" - KDD 2016
+4. IEEE Std 830-1998: IEEE Recommended Practice for Software Requirements Specifications
 
-* Academic sources (papers/books on forecasting, engagement modeling, etc.)
-* Websites/tools (e.g., [YouTube Data API v3](https://developers.google.com/youtube/v3), Streamlit)
-* Existing SRS formats used as a reference
+**Technical Documentation:**
+- YouTube Data API v3 Documentation: https://developers.google.com/youtube/v3
+- Flask Web Framework Documentation: https://flask.palletsprojects.com/
+- XGBoost Documentation: https://xgboost.readthedocs.io/
+- PostgreSQL Documentation: https://www.postgresql.org/docs/
+
+**Development Standards:**
+- PEP 8 - Style Guide for Python Code
+- REST API Design Guidelines
+- Web Content Accessibility Guidelines (WCAG) 2.1
 
 ### 1.5 Overview
+
+This SRS document is organized into seven main sections:
+- **Section 1**: Introduction and document context
+- **Section 2**: Overall system description and constraints
+- **Section 3**: Detailed functional requirements and use cases
+- **Section 4**: External interface specifications
+- **Section 5**: Non-functional requirements and quality attributes
+- **Section 6**: Additional requirements and constraints
+- **Section 7**: Supporting diagrams and appendices
 
 ---
 
 ## 2. Overall Description
 
-### Product Perspective
+### 2.1 Product Perspective
 
-12. Is this an independent system or will it integrate with other platforms/tools?
-There are plans to extend this service as an extension, possibly on chrome/edge/firefox/etc. And, yes, if we can find any other platform (instead of just internet browsers, we'd be willing to do so)
-13. Will it be hosted online or distributed as a desktop app?
-Hosted online
+**System Context:**
+ViewTrendsSL operates as an independent web-based system with external dependencies on YouTube Data API v3 and cloud hosting infrastructure. The system follows a layered architecture pattern with clear separation between presentation, business logic, and data layers.
 
-### Product Functions
+**System Interfaces:**
+- **External API Integration**: YouTube Data API v3 for video and channel metadata
+- **Web Browser Interface**: Cross-platform web application accessible via standard browsers
+- **Database Interface**: PostgreSQL for production data storage
+- **Cloud Hosting**: Containerized deployment on cloud platforms
 
-14. What are the high-level modules/features? (e.g., data collection, forecasting, visualization)
-All. And also, AI based predictions/suggestions/video planning/etc. as i have explained in a previous step. 
+**Future Integration Potential:**
+- Browser extension development for direct YouTube integration
+- Mobile application development for enhanced accessibility
+- Third-party analytics platform integration
+- Social media management tool integration
 
-### User Characteristics
+### 2.2 Product Functions
 
-15. Who are the target users (e.g., Sri Lankan YouTubers, media companies)?
-already discussed
-16. What technical expertise is expected of users?
-just basic expertise. but maybe we can add a pro version for tech-savvy users(in the future)
+**Core System Functions:**
 
-### Constraints
+1. **Data Collection and Management**
+   - Automated YouTube metadata harvesting
+   - Real-time data quality validation
+   - Efficient API quota management
+   - Historical data processing and storage
 
-17. What are the key limitations? 
-YouTube API quota, regional data gaps, performance limits, resource-intensive to calculate multiple projections at the same time, hard to analyse video/audio of a big amount of YT videos first (let alone make predictions for one video)
-18. Are there any limitations on tools/libraries used due to OS or deployment choices?
-for now not sure, we're trying to make it cross platform(universal) compatible web hosted tool. we use windows and Linux to program. 
-The fact that your team uses different operating systems (Windows and Linux) is a perfect reason to use Docker.
+2. **Machine Learning Pipeline**
+   - Feature engineering from raw video metadata
+   - Separate model training for Shorts and Long-form content
+   - Model evaluation and performance monitoring
+   - Prediction generation with confidence intervals
 
-Solution: Define your entire application environment in a Dockerfile and a docker-compose.yml file. This includes the exact Python version and all library versions. Everyone on the team then runs the project inside a Docker container. This completely eliminates cross-platform compatibility issues and makes deployment to a cloud server seamless.
+3. **User Interface and Visualization**
+   - Intuitive video URL input interface
+   - Interactive prediction result visualization
+   - User authentication and session management
+   - Responsive design for multiple device types
 
-### Assumptions and Dependencies
+4. **System Administration**
+   - Automated data pipeline monitoring
+   - System performance tracking
+   - Error logging and alerting
+   - Database backup and recovery
 
-19. What assumptions are being made? 
-Trying to make no assumptions, trying to go with the most realistic world scenarios(assumptions will only made when really necessary-when there's no feasible way out)
-20. Dependencies on tools/services?
-already discussed(might need more)
+### 2.3 User Classes and Characteristics
+
+**Primary User Classes:**
+
+1. **Content Creators (Primary Users)**
+   - **Profile**: Individual YouTubers, influencers, and independent creators
+   - **Technical Expertise**: Basic to intermediate computer skills
+   - **Usage Patterns**: Occasional use for strategic content planning
+   - **Key Needs**: Simple interface, accurate predictions, actionable insights
+
+2. **Digital Marketers (Secondary Users)**
+   - **Profile**: Marketing professionals and agency personnel
+   - **Technical Expertise**: Intermediate to advanced analytical skills
+   - **Usage Patterns**: Regular use for campaign planning and optimization
+   - **Key Needs**: Detailed analytics, export capabilities, trend analysis
+
+3. **Media Companies (Secondary Users)**
+   - **Profile**: Production houses, media agencies, and content networks
+   - **Technical Expertise**: Advanced technical and analytical capabilities
+   - **Usage Patterns**: Intensive use for portfolio optimization
+   - **Key Needs**: Bulk analysis, API access, custom reporting
+
+4. **Academic Researchers (Tertiary Users)**
+   - **Profile**: University researchers and data scientists
+   - **Technical Expertise**: Advanced technical and statistical knowledge
+   - **Usage Patterns**: Research-focused usage with dataset access
+   - **Key Needs**: Data export, methodology transparency, reproducibility
+
+### 2.4 Operating Environment
+
+**Client-Side Requirements:**
+- **Web Browser**: Modern browsers (Chrome 90+, Firefox 88+, Safari 14+, Edge 90+)
+- **JavaScript**: Enabled for interactive features
+- **Screen Resolution**: Minimum 1024x768, optimized for 1920x1080
+- **Internet Connection**: Stable broadband connection (minimum 1 Mbps)
+
+**Server-Side Environment:**
+- **Operating System**: Linux-based cloud hosting (Ubuntu 20.04 LTS or equivalent)
+- **Runtime Environment**: Python 3.9+ with virtual environment
+- **Web Server**: Gunicorn WSGI server with Nginx reverse proxy
+- **Database**: PostgreSQL 13+ with connection pooling
+- **Containerization**: Docker with Docker Compose for orchestration
+
+**Development Environment:**
+- **Version Control**: Git with GitHub repository
+- **Development OS**: Windows 11 and Ubuntu 24.04 (team compatibility)
+- **IDE**: Visual Studio Code with Python extensions
+- **Testing**: pytest framework with coverage reporting
+
+### 2.5 Design and Implementation Constraints
+
+**Technical Constraints:**
+- **API Limitations**: YouTube Data API v3 quota restrictions (10,000 units/day per key)
+- **Processing Power**: Limited computational resources for model training
+- **Storage Capacity**: Database size limitations on free-tier hosting
+- **Network Bandwidth**: Potential latency issues for real-time predictions
+
+**Development Constraints:**
+- **Timeline**: 10-week development period with academic milestones
+- **Team Size**: Three-person development team with distributed responsibilities
+- **Budget**: Zero-cost approach using free-tier services and open-source tools
+- **Platform Compatibility**: Cross-platform development across Windows and Linux
+
+**Regulatory Constraints:**
+- **Data Privacy**: Compliance with YouTube API Terms of Service
+- **Academic Ethics**: University research ethics guidelines
+- **Open Source**: GPL-compatible licensing for academic use
+
+**Performance Constraints:**
+- **Response Time**: Predictions must be delivered within 30 seconds
+- **Concurrent Users**: Support for minimum 10 simultaneous users
+- **Data Processing**: Handle 1000+ video predictions per hour
+- **Model Accuracy**: Achieve MAPE < 30% for 7-day forecasts
+
+### 2.6 Assumptions and Dependencies
+
+**System Assumptions:**
+- YouTube Data API v3 remains stable and accessible throughout development
+- Sri Lankan YouTube content maintains consistent metadata patterns
+- User internet connections support real-time web application usage
+- Cloud hosting services maintain reliable uptime and performance
+
+**External Dependencies:**
+- **YouTube Data API v3**: Primary data source for video and channel metadata
+- **Cloud Hosting Platform**: Heroku or equivalent for application deployment
+- **PostgreSQL Service**: Database hosting with backup capabilities
+- **Python Ecosystem**: Stability of core libraries (Flask, XGBoost, Pandas)
+
+**Data Dependencies:**
+- **Channel Identification**: Availability of Sri Lankan channel metadata
+- **Historical Data**: Access to 6-12 months of video performance data
+- **API Quota**: Sufficient quota allocation for initial data collection
+- **Data Quality**: Consistent and accurate metadata from YouTube API
 
 ---
 
-## 3. Specific Requirements
+## 3. System Features
 
-### 3.1 Functionality
+### 3.1 User Authentication and Management
 
-21. Describe in detail what the user can do with the tool. 
-Already discussed in detail
-input a video title and get predictions, compare trends, track videos over time, retention analyser, videolytics, channelytics, opportunity finder, competitor scorecard, SEO and ranking, channel optimization, video and thumbnail, AI features, 
-22. What automation features are available? 
-already discussed(AI-based suggestions, etc)
-scheduled data refreshes, etc.
+**Feature ID**: F001  
+**Priority**: High  
+**Risk**: Medium  
 
-### 3.2 Usability
+**Description:**
+Secure user registration, authentication, and session management system enabling personalized access to prediction services.
 
-23. What are the expectations for ease of use?
-fewer buttons, less complex outputs(but can dive into data in a deeper/complex manner if the user needs, it's just the basic look looks simple. (users should be able to do complex things if they need to), more visualizations than text
-24. Are there any UI standards you plan to follow?
-no, basic good practices that suit this application might be enough. maybe as similar as viewstats, vidiq, vidstats, socialblade, tubebuddy
-25. Any requirements for accessibility (e.g., colorblind-friendly)?
-not yet
+**Functional Requirements:**
 
-### 3.3 Reliability
+**FR-001**: User Registration
+- System shall provide user registration with email and password
+- System shall validate email format and password strength (minimum 8 characters, mixed case, numbers)
+- System shall send email verification for account activation
+- System shall prevent duplicate email registrations
 
-26. What is the target system uptime?
-24x7
-27. How is data integrity ensured?
-no idea as for now. but surely we should have plans on that
-Data integrity ensures your data is reliable. Here are two simple but effective methods:
+**FR-002**: User Authentication
+- System shall authenticate users via email/password combination
+- System shall implement secure password hashing using bcrypt algorithm
+- System shall maintain user sessions with automatic timeout (2 hours)
+- System shall provide secure logout functionality
 
-Database Constraints: When you design your database schema (e.g., in SQLite or PostgreSQL), use constraints. For example, make sure the video_id is a PRIMARY KEY (must be unique), foreign keys (like channel_id in the videos table) actually exist in the channels table, and important fields like view_count cannot be empty (NOT NULL).
+**FR-003**: Password Management
+- System shall provide password reset functionality via email
+- System shall enforce password complexity requirements
+- System shall prevent password reuse for last 3 passwords
+- System shall implement account lockout after 5 failed login attempts
 
-Data Validation Scripts: Before inserting data into your database, your Python script should perform basic checks. For example, ensure that view_count is a non-negative integer and duration is in a valid format.
-28. Are any backup or recovery mechanisms needed?
-yes, most possibly. but we still dont have plans, which we should create
-For a university project, a simple backup strategy is sufficient.
+**Input/Output Specifications:**
+- **Input**: Email address, password, confirmation password
+- **Output**: Authentication token, user session, success/error messages
+- **Data Validation**: Email format, password complexity, CSRF protection
 
-Plan: Set up a scheduled task (a cron job on Linux/macOS or Task Scheduler on Windows) to run once a day. This task should execute a simple script that:
+### 3.2 Video Prediction Engine
 
-For SQLite: Copies the .db file to a backup folder with the date in the filename (e.g., backup-2025-08-06.db).
+**Feature ID**: F002  
+**Priority**: Critical  
+**Risk**: High  
 
-For PostgreSQL: Uses the pg_dump command-line utility to create a compressed backup file.
+**Description:**
+Core machine learning system that generates viewership predictions for YouTube videos based on metadata analysis and trained models.
 
-### 3.4 Performance and Security
+**Functional Requirements:**
 
-29. What is the maximum response time expected for forecasts?
-1 min(just a random time that came to my mind, we'd have to develop and see ig)
-30. How many concurrent users/videos should it support?
-as much as possible. start small, and after deployment, slowly progress through.
-31. What security measures are planned (e.g., API key protection, user data access control)?
-nothing yet, but surely we should implement.
-Never, ever commit your API keys to GitHub. Store them in a .env file at the root of your project. Add .env to your .gitignore file. Your Python code will use the python-dotenv library to load these keys as environment variables. This is standard, non-negotiable practice.
-32. Will there be any form of authentication or login system?
-yeah, a login system would be needed
-For the MVP, a simple email and password login system is sufficient. Libraries like Flask-Login can handle most of the heavy lifting (session management, password hashing). Ensure you are hashing passwords using a strong algorithm like bcrypt (Flask-Login can help with this).
+**FR-004**: Video URL Processing
+- System shall accept YouTube video URLs in standard formats
+- System shall extract video ID from various URL formats (youtube.com, youtu.be, mobile links)
+- System shall validate video accessibility and public status
+- System shall retrieve video metadata via YouTube Data API v3
 
-### 3.5 Supportability
+**FR-005**: Feature Extraction
+- System shall extract temporal features (publish_hour, day_of_week, is_weekend)
+- System shall calculate content features (title_length, tag_count, description_length)
+- System shall determine video type (Shorts ≤60s vs Long-form >60s)
+- System shall retrieve channel authority metrics (subscriber_count, video_count)
 
-33. Will the system be maintained by the current team after release?
-yes, most probably
-34. Will logging and monitoring be part of the system?
-yes
-35. Will it be open source or have community support?
-it's a university project, so i guess it'd be open-source
+**FR-006**: Model Inference
+- System shall select appropriate model based on video type (Shorts/Long-form)
+- System shall generate predictions for 24-hour, 7-day, and 30-day intervals
+- System shall calculate prediction confidence intervals
+- System shall handle edge cases and provide fallback predictions
 
-### 3.6 Design Constraints
+**FR-007**: Prediction Validation
+- System shall validate prediction reasonableness against historical patterns
+- System shall flag potentially unreliable predictions
+- System shall provide prediction accuracy indicators
+- System shall log prediction requests for model improvement
 
-36. Are there mandatory libraries, programming languages, or databases to be used?
-nope
-37. What frameworks (e.g., Streamlit, SQLite3) are chosen and why?
-already discussed. open for expanding with other frameworks.
-38. Are there compatibility constraints (e.g., must work on Windows, Chrome, etc.)?
-universal hosted website
+**Input/Output Specifications:**
+- **Input**: YouTube video URL, prediction timeframes
+- **Output**: Predicted view counts, confidence intervals, video metadata
+- **Performance**: Response time < 30 seconds, accuracy MAPE < 30%
 
-### 3.7 Online Documentation
+### 3.3 Data Visualization Dashboard
 
-39. Will there be an integrated help button or user guide?
-yes(less priority)
-40. Any planned FAQs, tooltips, or walkthroughs?
-yes(less priority)
+**Feature ID**: F003  
+**Priority**: High  
+**Risk**: Medium  
 
-### 3.8 Purchased Components
+**Description:**
+Interactive web interface for displaying prediction results, video metadata, and analytical insights through charts and visualizations.
 
-41. Are any paid APIs, plugins, or tools being used?
-still not, but we might need some of them in the future. (we still don't have a clue what we would need) so might wanna plan on that
+**Functional Requirements:**
 
-### 3.9 Interfaces
+**FR-008**: Prediction Results Display
+- System shall display video thumbnail, title, and basic metadata
+- System shall generate interactive line chart showing predicted viewership curve
+- System shall highlight key prediction milestones (24h, 7d, 30d)
+- System shall provide downloadable prediction summary
 
-#### User Interfaces
+**FR-009**: Interactive Visualizations
+- System shall enable chart zoom and pan functionality
+- System shall provide hover tooltips with detailed information
+- System shall allow timeframe selection for prediction display
+- System shall support chart export in PNG/SVG formats
 
-42. List and describe the pages/modules planned for the UI 
-dashboard, input form, trend graph, suggestions, Trending Keywords(among similar channels), personalized video ideas(ideal length range/ ideal title keywords/ ideal description approaches/etc. Competitor/Subscriber analysis, trend alerts, channel audit tool, SEO, keyword research, thumbnail suggestions, video suggestions).
-MVP UI Plan:
+**FR-010**: Comparative Analysis
+- System shall enable comparison between multiple video predictions
+- System shall display category-based performance benchmarks
+- System shall show channel performance context
+- System shall provide trend analysis insights
 
-Login/Register Page: A simple form for user authentication.
+**Input/Output Specifications:**
+- **Input**: Prediction data, user interaction events
+- **Output**: Interactive charts, downloadable reports, visual insights
+- **Responsiveness**: Support for desktop, tablet, and mobile devices
 
-Dashboard/Input Page: The main page after login. It should have:
+### 3.4 Data Collection and Management
 
-A prominent input field for the user to paste a YouTube video URL.
+**Feature ID**: F004  
+**Priority**: Critical  
+**Risk**: High  
 
-A "Forecast" button.
+**Description:**
+Automated system for collecting, processing, and storing YouTube video and channel data for model training and system operation.
 
-A section below to display the results.
+**Functional Requirements:**
 
-Results Display (on the same page):
+**FR-011**: Automated Data Collection
+- System shall collect video metadata from curated Sri Lankan channels
+- System shall implement efficient API quota management across multiple keys
+- System shall perform daily data collection with error handling
+- System shall validate and clean collected data automatically
 
-Displays the video's title and thumbnail.
+**FR-012**: Data Storage and Retrieval
+- System shall store video metadata in normalized database schema
+- System shall implement efficient indexing for fast query performance
+- System shall maintain data integrity with foreign key constraints
+- System shall provide data backup and recovery mechanisms
 
-A large, clear chart showing the predicted viewership curve for the next 7 days.
+**FR-013**: Data Quality Assurance
+- System shall validate data completeness and accuracy
+- System shall detect and handle missing or corrupted data
+- System shall implement data deduplication mechanisms
+- System shall generate data quality reports
 
-Key metrics displayed simply (e.g., "Predicted 7-Day Views: 150,000").
+**Input/Output Specifications:**
+- **Input**: YouTube API responses, channel lists, configuration parameters
+- **Output**: Structured database records, quality reports, error logs
+- **Performance**: Process 1000+ videos per hour, 99.9% data accuracy
 
-All other features (competitor analysis, keyword tools, etc.) should be moved to your "Future Work" documentation.
+### 3.5 System Administration and Monitoring
 
+**Feature ID**: F005  
+**Priority**: Medium  
+**Risk**: Low  
 
-43. What key controls/fields should each page have?
-try to maximize visualisations
-dashboard: access to all other tools, login, help,essentials
-input: video upload-analysis, analysis without video upload, brainstorm(finetune idea/initial idea creation)
-trend graph(output): change timeframe(sensitivity)/ change graph type(according to what's shown in it)
-keywords: analytics about each keywords when clicked, keyword filters (by country, type, etc)
-suggestions: (channel audit tool, SEO, keyword research, thumbnail suggestions, video suggestions) what trends, what viewers watch most, interesting personalised video ideas(titles/descriptions/content/length)
-Competitor/Subscriber analysis: similar channels list of channels, can access each channel to see what videos worked well, what kind videos subscribers are watching
-trend alerts: a interface where current trends are shown(can be filtered with video titles, country, thumbnails, content, categories, keywords, hashtags if needed. default: general trending)
+**Description:**
+Administrative interface and monitoring system for system health tracking, performance optimization, and maintenance operations.
 
-#### Hardware Interfaces
+**Functional Requirements:**
 
-44. What are the expected client requirements (RAM, storage, browser)?
-browser, ram(for frontend graphs), storage might be needed(not sure), and there might be other requirements that have not been identified yet.
+**FR-014**: System Health Monitoring
+- System shall monitor API quota usage and alert on threshold breach
+- System shall track system performance metrics (response time, error rate)
+- System shall log all system events with appropriate severity levels
+- System shall provide automated alerting for critical system issues
 
-#### Software Interfaces
+**FR-015**: Performance Analytics
+- System shall track user engagement and usage patterns
+- System shall monitor prediction accuracy over time
+- System shall generate system performance reports
+- System shall identify and alert on performance degradation
 
-45. What APIs or external services will the system interact with?
-Youtube API v3 for now. and there could be many more that we still haven't identified
+**FR-016**: Maintenance Operations
+- System shall provide database backup and restore functionality
+- System shall support model retraining and deployment
+- System shall enable configuration updates without system restart
+- System shall provide system status dashboard for administrators
 
-#### Communication Interfaces
-
-46. Will it use HTTP/HTTPS, REST, FTP, or WebSockets?
-Most probable yes to: HTTPS, REST, FTP, WebSockets
-47. Is the system expected to work offline at all?
-No
-
-### 3.10 Database Requirements
-
-48. What data needs to be stored?
-dataset(which will be updated automatically constantly daily to update the ML model daily), videos, metadata, userdata, logs, session data, security data, cache/cookies(for efficient services), report data, analysis data, ebug data, output data, other data that might be help in improving the model, website, service...
-49. What is the expected scale?
-depends on the demand(of users and also the upload rate of YT creators)
-50. What are the indexing and querying requirements?
-currently no idea, wanna plan that too
-Database indexes are like an index in a book; they make finding data much faster. For your project, the most critical query will be "get all view count snapshots for a specific video, ordered by time."
-
-Plan: In your Snapshots table, you will have columns like snapshot_id, video_id, timestamp, view_count. You must create a composite index on (video_id, timestamp). This will make generating the historical part of your forecast graphs extremely fast, even with millions of rows.
-
-### 3.11 Legal, Copyright, Licensing
-
-51. Are there copyright or data usage issues with YouTube data?
-dont think so as long as the videos are public. no strict rules about using copyrighted content to train AI. as we're not explicitly showing their material to earn money from screening. it's very indirect. 
-52. Will users have to agree to terms of use?
-still no need for 'terms of use' has arisen. But might wanna consider that as well
-
-Legal: Re-read YouTube's API Terms of Service. The key takeaway is: you can analyze public data, but you cannot aggregate and sell or publicly display the raw data as your own. Your forecasts are derived data, which is generally safer. Add a "Terms of Service" and "Privacy Policy" to your website if you have user logins.
-
-### 3.12 Standards
-
-53. Are there any design/development standards followed (e.g., PEP-8, GDPR, WCAG)?
-we might need to do that, but not specified. use a suitable one for this application's SRS
-54. Any expected code audit or data protection compliance?
-no, might wanna consider. we'll be sharing this on GitHub for development. 
-
-Coding: Adopt the PEP-8 style guide for all Python code. Use a tool like flake8 or black to automatically enforce it.
-
-Version Control: Use a Gitflow-like branching strategy (e.g., a main branch, a develop branch, and feature branches for each task). This prevents conflicts and keeps your main branch stable. Write clear, concise commit messages.
+**Input/Output Specifications:**
+- **Input**: System metrics, configuration changes, maintenance commands
+- **Output**: Status reports, alerts, performance dashboards
+- **Availability**: 24/7 monitoring with 99.5% uptime target
 
 ---
 
-## 4. Supporting Information
+## 4. External Interface Requirements
 
-55. Will there be any appendices (e.g., diagrams, data samples)?
-yes, if so, its better(don't know what they should be though)
-56. Any system diagrams, user flowcharts, or architecture sketches planned?
-yes. system diagrams, user flowcharts, gantt charts and architecture sketches
-57. Will screenshots or mockups be added later?
-yes.
+### 4.1 User Interfaces
+
+**UI-001: Login/Registration Interface**
+- **Description**: Clean, professional authentication interface
+- **Layout**: Centered form with ViewTrendsSL branding
+- **Elements**: Email field, password field, login/register buttons, forgot password link
+- **Validation**: Real-time form validation with clear error messages
+- **Accessibility**: WCAG 2.1 AA compliance, keyboard navigation support
+
+**UI-002: Main Dashboard Interface**
+- **Description**: Primary user interface for video URL input and prediction display
+- **Layout**: Header with navigation, central input area, results section below
+- **Elements**: 
+  - Prominent URL input field with placeholder text
+  - "Generate Prediction" button with loading state
+  - Video metadata display area
+  - Interactive prediction chart container
+- **Responsiveness**: Adaptive layout for desktop (1920x1080), tablet (768x1024), mobile (375x667)
+
+**UI-003: Prediction Results Interface**
+- **Description**: Comprehensive display of prediction results and analytics
+- **Layout**: Split layout with video info sidebar and main chart area
+- **Elements**:
+  - Video thumbnail and metadata panel
+  - Interactive line chart with prediction curve
+  - Key metrics summary (24h, 7d, 30d predictions)
+  - Export and share functionality
+- **Interactivity**: Chart zoom, hover tooltips, timeframe selection
+
+**UI Design Standards:**
+- **Color Scheme**: Professional blue/white theme with red YouTube accents
+- **Typography**: Roboto font family for consistency with Google Material Design
+- **Icons**: Material Design icon set for consistency
+- **Loading States**: Skeleton screens and progress indicators
+- **Error Handling**: User-friendly error messages with suggested actions
+
+### 4.2 Hardware Interfaces
+
+**Client Hardware Requirements:**
+- **Minimum RAM**: 4GB for smooth browser operation
+- **Storage**: 100MB browser cache for optimal performance
+- **Network**: Broadband internet connection (minimum 1 Mbps)
+- **Display**: Minimum 1024x768 resolution, optimized for 1920x1080
+
+**Server Hardware Specifications:**
+- **CPU**: Minimum 2 vCPU cores for concurrent request handling
+- **RAM**: 4GB minimum, 8GB recommended for model inference
+- **Storage**: 20GB SSD for database and application files
+- **Network**: High-speed internet connection for API calls and user requests
+
+### 4.3 Software Interfaces
+
+**SI-001: YouTube Data API v3 Interface**
+- **Purpose**: Primary data source for video and channel metadata
+- **Protocol**: HTTPS REST API
+- **Authentication**: API key-based authentication
+- **Rate Limiting**: 10,000 units per day per API key
+- **Data Format**: JSON responses with structured metadata
+- **Error Handling**: Comprehensive error code handling and retry logic
+
+**SI-002: Database Interface**
+- **Database System**: PostgreSQL 13+
+- **Connection**: SQLAlchemy ORM with connection pooling
+- **Schema**: Normalized relational schema with foreign key constraints
+- **Backup**: Automated daily backups with point-in-time recovery
+- **Performance**: Indexed queries with sub-second response times
+
+**SI-003: Machine Learning Model Interface**
+- **Model Format**: Serialized XGBoost models (.pkl files)
+- **Loading**: Models loaded at application startup
+- **Inference**: Real-time prediction generation
+- **Versioning**: Model version tracking and rollback capability
+- **Performance**: Prediction generation within 5 seconds
+
+### 4.4 Communication Interfaces
+
+**CI-001: HTTP/HTTPS Protocol**
+- **Protocol**: HTTPS for all client-server communication
+- **Security**: TLS 1.3 encryption with valid SSL certificates
+- **Methods**: GET, POST, PUT, DELETE for RESTful API operations
+- **Headers**: Standard HTTP headers with CORS support
+- **Status Codes**: Comprehensive HTTP status code implementation
+
+**CI-002: REST API Interface**
+- **Base URL**: https://viewtrendssl.herokuapp.com/api/v1
+- **Authentication**: JWT token-based authentication
+- **Content Type**: JSON for request/response bodies
+- **Rate Limiting**: 100 requests per minute per user
+- **Documentation**: OpenAPI 3.0 specification with interactive docs
+
+**API Endpoints:**
+```
+POST /api/v1/auth/login          # User authentication
+POST /api/v1/auth/register       # User registration
+POST /api/v1/predict             # Generate video prediction
+GET  /api/v1/user/profile        # User profile information
+GET  /api/v1/system/health       # System health check
+```
+
+---
+
+## 5. Non-Functional Requirements
+
+### 5.1 Performance Requirements
+
+**PR-001: Response Time Requirements**
+- **Prediction Generation**: Maximum 30 seconds end-to-end response time
+- **Page Load Time**: Maximum 3 seconds for initial page load
+- **API Response Time**: Maximum 5 seconds for standard API calls
+- **Database Query Time**: Maximum 1 second for standard queries
+
+**PR-002: Throughput Requirements**
+- **Concurrent Users**: Support minimum 10 simultaneous users
+- **Prediction Volume**: Process 100+ predictions per hour
+- **Data Processing**: Handle 1000+ video metadata records per hour
+- **API Calls**: Efficient quota usage with batch processing where possible
+
+**PR-003: Scalability Requirements**
+- **User Growth**: Architecture supports scaling to 100+ concurrent users
+- **Data Volume**: Database design supports millions of video records
+- **Model Performance**: Prediction accuracy maintained with increased data volume
+- **Infrastructure**: Containerized deployment for horizontal scaling
+
+### 5.2 Safety Requirements
+
+**SR-001: Data Protection**
+- System shall implement secure data storage with encryption at rest
+- System shall protect user passwords with bcrypt hashing (cost factor 12)
+- System shall sanitize all user inputs to prevent injection attacks
+- System shall implement secure session management with CSRF protection
+
+**SR-002: API Security**
+- System shall protect API keys using environment variables
+- System shall implement rate limiting to prevent API abuse
+- System shall validate all external API responses before processing
+- System shall implement circuit breaker pattern for external service failures
+
+**SR-003: System Reliability**
+- System shall implement graceful error handling for all failure scenarios
+- System shall provide automatic recovery from transient failures
+- System shall maintain system stability under high load conditions
+- System shall implement comprehensive logging for security monitoring
+
+### 5.3 Security Requirements
+
+**SEC-001: Authentication and Authorization**
+- System shall implement secure user authentication with password complexity requirements
+- System shall enforce session timeout after 2 hours of inactivity
+- System shall implement account lockout after 5 failed login attempts
+- System shall provide secure password reset functionality
+
+**SEC-002: Data Security**
+- System shall encrypt all data transmission using HTTPS/TLS 1.3
+- System shall implement input validation and sanitization for all user inputs
+- System shall protect against common web vulnerabilities (OWASP Top 10)
+- System shall implement secure API key management and rotation
+
+**SEC-003: Privacy Protection**
+- System shall comply with YouTube API Terms of Service for data usage
+- System shall implement user data privacy controls
+- System shall provide clear privacy policy and terms of service
+- System shall enable user data deletion upon request
+
+### 5.4 Software Quality Attributes
+
+**QA-001: Reliability**
+- **Availability**: 99.5% uptime during operational hours
+- **Mean Time Between Failures (MTBF)**: Minimum 720 hours
+- **Mean Time To Recovery (MTTR)**: Maximum 4 hours
+- **Error Rate**: Less than 1% of requests result in system errors
+
+**QA-002: Usability**
+- **Learning Curve**: New users can generate predictions within 5 minutes
+- **Task Completion Rate**: 95% success rate for core prediction workflow
+- **User Satisfaction**: Target satisfaction score of 4.0/5.0
+- **Accessibility**: WCAG 2.1 AA compliance for inclusive design
+
+**QA-003: Maintainability**
+- **Code Quality**: Minimum 80% code coverage with automated tests
+- **Documentation**: Comprehensive inline documentation and API docs
+- **Modularity**: Clear separation of concerns with modular architecture
+- **Deployment**: Automated deployment pipeline with rollback capability
+
+**QA-004: Portability**
+- **Browser Compatibility**: Support for Chrome, Firefox, Safari, Edge (latest 2 versions)
+- **Operating System**: Cross-platform web application (Windows, macOS, Linux)
+- **Mobile Responsiveness**: Functional interface on mobile devices
+- **Containerization**: Docker-based deployment for environment consistency
+
+---
+
+## 6. Other Requirements
+
+### 6.1 Legal Requirements
+
+**LR-001: Intellectual Property**
+- System shall comply with YouTube Data API Terms of Service
+- System shall respect copyright and intellectual property rights
+- System shall implement proper attribution for third-party libraries
+- System shall use GPL-compatible licensing for open-source distribution
+
+**LR-002: Data Usage Compliance**
+- System shall not store or redistribute raw YouTube data beyond API terms
+- System shall implement data retention policies in compliance with regulations
+- System shall provide user data deletion capabilities
+- System shall maintain audit logs for compliance verification
+
+**LR-003: Academic Ethics**
+- System shall comply with University of Moratuwa research ethics guidelines
+- System shall ensure transparent methodology for academic reproducibility
+- System shall provide proper citation and attribution for research sources
+- System shall enable open-source contribution for academic community
+
+### 6.2 Standards Compliance
+
+**SC-001: Development Standards**
+- **Code Style**: PEP 8 compliance for all Python code
+- **API Design**: RESTful API design principles
+- **Database Design**: Third Normal Form (3NF) for relational schema
+- **Version Control**: Git workflow with feature branches and code review
+
+**SC-002: Web Standards**
+- **HTML/CSS**: W3C standards compliance
+- **JavaScript**: ES6+ standards with modern browser support
+- **Accessibility**: WCAG 2.1 AA compliance
+- **Performance**: Google PageSpeed Insights score > 90
+
+**SC-003: Security Standards**
+- **OWASP**: Compliance with OWASP Top 10 security guidelines
+- **Encryption**: Industry-standard encryption algorithms (AES-256, RSA-2048)
+- **Authentication**: OAuth 2.0 compatible authentication framework
+- **Data Protection**: GDPR-inspired privacy protection measures
+
+### 6.3 Business Rules
+
+**BR-001: User Access Rules**
+- Free tier users limited to 10 predictions per day
+- Registered users receive higher prediction quotas
+- System administrators have unrestricted access to all features
+- Guest users can view demo predictions without registration
+
+**BR-002: Data Processing Rules**
+- Only public YouTube videos are processed for predictions
+- Videos must be accessible via YouTube Data API v3
+- Predictions are generated only for videos with sufficient metadata
+- System prioritizes Sri Lankan content but supports international videos
+
+**BR-003: Model Performance Rules**
+- Models are retrained monthly with new data
+- Prediction accuracy is monitored and reported
+- Models with accuracy below threshold are flagged for review
+- System provides confidence indicators for all predictions
+
+### 6.4 Database Requirements
+
+**DB-001: Data Storage Requirements**
+- **Primary Database**: PostgreSQL 13+ with ACID compliance
+- **Backup Strategy**: Daily automated backups with 30-day retention
+- **Data Integrity**: Foreign key constraints and data validation
+- **Performance**: Indexed queries with sub-second response times
+
+**DB-002: Schema Requirements**
+```sql
+-- Core database schema
+CREATE TABLE channels (
+    channel_id VARCHAR(50) PRIMARY KEY,
+    channel_name VARCHAR(255) NOT NULL,
+    subscriber_count INTEGER,
+    video_count INTEGER,
+    country VARCHAR(10),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE videos (
+    video_id VARCHAR(50) PRIMARY KEY,
+    channel_id VARCHAR(50) REFERENCES channels(channel_id),
+    title TEXT NOT NULL,
+    description TEXT,
+    published_at TIMESTAMP,
+    duration_seconds INTEGER,
+    category_id INTEGER,
+    is_short BOOLEAN,
+    tags TEXT[],
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE snapshots (
+    snapshot_id SERIAL PRIMARY KEY,
+    video_id VARCHAR(50) REFERENCES videos(video_id),
+    timestamp TIMESTAMP NOT NULL,
+    view_count BIGINT,
+    like_count INTEGER,
+    comment_count INTEGER,
+    INDEX(video_id, timestamp)
+);
+
+CREATE TABLE users (
+    user_id SERIAL PRIMARY KEY,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    last_login TIMESTAMP
+);
+
+CREATE TABLE predictions (
+    prediction_id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(user_id),
+    video_id VARCHAR(50),
+    prediction_24h INTEGER,
+    prediction_7d INTEGER,
+    prediction_30d INTEGER,
+    confidence_score FLOAT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+**DB-003: Performance Requirements**
+- **Query Response Time**: < 1 second for standard queries
+- **Concurrent Connections**: Support 50+ simultaneous database connections
+- **Data Volume**: Efficiently handle 1M+ video records
+- **Indexing Strategy**: Composite indexes on frequently queried columns
+
+---
+
+## 7. Appendices
+
+### Appendix A: Use Case Diagrams
+
+**Primary Use Cases:**
+1. **User Registration and Authentication**
+2. **Video Prediction Generation**
+3. **Prediction Result Visualization**
+4. **System Administration**
+
+### Appendix B: System Architecture Diagram
+
+**Layered Architecture Components:**
+- **Presentation Layer**: Web UI (Streamlit/HTML+CSS+JS)
+- **Application Layer**: REST API (Flask)
+- **Business Logic Layer**: ML Models and Data Processing
+- **Data Access Layer**: Database Operations (SQLAlchemy)
+- **Data Storage Layer**: PostgreSQL Database
+
+### Appendix C: Data Flow Diagrams
+
+**Level 0 DFD**: System context showing external entities
+**Level 1 DFD**: Major system processes and data stores
+**Level 2 DFD**: Detailed process decomposition
+
+### Appendix D: Entity Relationship Diagram
+
+**Core Entities:**
+- Users, Channels, Videos, Snapshots, Predictions
+- Relationships and cardinalities
+- Attribute specifications and constraints
+
+### Appendix E: User Interface Mockups
+
+**Wireframes for:**
+- Login/Registration pages
+- Main dashboard interface
+- Prediction results display
+- Mobile responsive layouts
+
+### Appendix F: API Specification
+
+**OpenAPI 3.0 Specification:**
+- Endpoint definitions
+- Request/response schemas
+- Authentication requirements
+- Error response formats
+
+### Appendix G: Test Cases
+
+**Test Categories:**
+- Unit tests for core functions
+- Integration tests for API endpoints
+- User acceptance test scenarios
+- Performance test specifications
+
+### Appendix H: Deployment Guide
+
+**Deployment Requirements:**
+- Docker containerization setup
+- Environment configuration
+- Database migration scripts
+- Monitoring and logging setup
+
+---
+
+**Document Approval:**
+
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| Data Lead | Senevirathne S.M.P.U. | | |
+| Backend Lead | Sanjula N.G.K. | | |
+| Frontend Lead | Shaamma M.S. | | |
+| Project Mentor | [To be assigned] | | |
+
+**Document History:**
+
+| Version | Date | Author | Changes |
+|---------|------|--------|---------|
+| 1.0 | 2025-08-06 | Team | Initial comprehensive SRS document |
+
+---
+
+*This document represents the complete software requirements specification for the ViewTrendsSL system and serves as the authoritative reference for all development, testing, and evaluation activities.*

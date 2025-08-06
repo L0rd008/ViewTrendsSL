@@ -232,20 +232,34 @@ CREATE TABLE users (
 #### 3.3.2 Model Training Process
 1. **Data Preprocessing**:
    - Handle missing values and outliers
-   - Normalize numerical features
-   - Encode categorical variables
-   - Create derived features
+   - Normalize numerical features using Z-score normalization
+   - Encode categorical variables (category, language)
+   - Apply log transformation to view counts for better distribution
+   - Create derived features based on research findings
 
-2. **Model Training**:
+2. **Feature Engineering** (Based on AMPS & SMTPD Research):
+   - **Early Popularity Features**: First 24-hour engagement metrics (critical predictor)
+   - **Temporal Features**: publish_hour, day_of_week, is_weekend
+   - **Content Features**: title_length, tag_count, description_length
+   - **Channel Authority**: subscriber_count, video_count, channel_age
+   - **Language Features**: Detected language from title/description
+   - **Engagement Ratios**: likes_per_view, comments_per_view
+
+3. **Model Training**:
    - Train/validation/test split (70/15/15)
    - Cross-validation for hyperparameter tuning
-   - Feature importance analysis
+   - Feature importance analysis using XGBoost built-in methods
    - Model serialization using joblib
+   - Separate training pipelines for Shorts and Long-form videos
 
-3. **Model Evaluation**:
-   - Primary metric: MAPE (Mean Absolute Percentage Error)
-   - Secondary metrics: MAE, RMSE
-   - Performance analysis by category and video type
+4. **Model Evaluation** (Following SMTPD Methodology):
+   - **Primary Metrics**: 
+     - MAPE (Mean Absolute Percentage Error)
+     - MAE (Mean Absolute Error)
+     - SRC (Spearman Rank Correlation)
+   - **Secondary Metrics**: RMSE, R² Score
+   - **Temporal Evaluation**: Performance across different prediction horizons (1d, 7d, 30d)
+   - **Category Analysis**: Performance by content category and video type
 
 ### 3.4 API Design
 
@@ -1174,15 +1188,26 @@ streamlit-plotly>=0.1.0 // Plotly integration
 ### 12.2 Academic References
 
 #### 12.2.1 Research Papers
-**YouTube Analytics and Prediction:**
-1. "YouTube Video Popularity Prediction Using Machine Learning" - arXiv:2503.04446v1
-   - https://arxiv.org/html/2503.04446v1
-   - Relevance: Baseline methodologies for video popularity prediction
-
-2. "Predicting YouTube Video Popularity through Early Engagement Metrics" - Science Direct
+**Primary Academic Foundation:**
+1. **"AMPS: Predicting popularity of short-form videos using multi-modal attention mechanisms"** - Journal of Retailing and Consumer Services (2024)
    - https://www.sciencedirect.com/science/article/abs/pii/S0969698924000742
-   - Relevance: Early engagement indicators and feature engineering
+   - **Key Contributions**: 
+     - CDF-based popularity standard for realistic real-world distribution
+     - Multi-modal attention mechanism (BiLSTM + Self-Attention + Co-Attention)
+     - Separate treatment of Shorts vs Long-form videos
+     - 13K YouTube Shorts dataset with comprehensive metadata
+   - **Relevance**: Direct validation of our separate models approach and multi-modal feature engineering strategy
 
+2. **"SMTPD: A New Benchmark for Temporal Prediction of Social Media Popularity"** - arXiv:2503.04446v1 (2025)
+   - https://arxiv.org/html/2503.04446v1
+   - **Key Contributions**:
+     - 282K multilingual YouTube samples across 90+ languages
+     - Temporal alignment importance for accurate predictions
+     - Early popularity as the most critical predictive feature
+     - 30-day prediction framework with daily tracking
+   - **Relevance**: Validates our temporal prediction approach and emphasizes early engagement metrics
+
+**Supporting Literature:**
 3. "Social Media Analytics: A Survey of Techniques, Tools and Platforms" - ACM Computing Surveys
    - Relevance: Comprehensive overview of social media analytics methodologies
 
