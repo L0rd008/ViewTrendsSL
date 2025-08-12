@@ -7,9 +7,9 @@ name = "viewtrendssl"
 version = "1.0.0"
 description = "YouTube Viewership Forecasting for Sri Lankan Audience"
 authors = [
-    {name = "Senevirathne S.M.P.U.", email = "senevirathne@example.com"},
-    {name = "Sanjula N.G.K.", email = "sanjula@example.com"},
-    {name = "Shaamma M.S.", email = "shaamma@example.com"}
+    {name = "Senevirathne S.M.P.U.", email = "pasindusenevirathne.22@cse.mrt.ac.lk"},
+    {name = "Sanjula N.G.K.", email = "kevin.22@cse.mrt.ac.lk"},
+    {name = "Shaamma M.S.", email = "sajahan.22@cse.mrt.ac.lk"}
 ]
 license = {text = "MIT"}
 readme = "README.md"
