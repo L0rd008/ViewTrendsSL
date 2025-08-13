@@ -1,0 +1,320 @@
+# ViewTrendsSL - Pre-commit Configuration
+# Automated code quality checks before commits
+# Install with: pre-commit install
+
+# =============================================================================
+# REPOSITORY CONFIGURATION
+# =============================================================================
+
+repos:
+  # =============================================================================
+  # GENERAL CODE QUALITY
+  # =============================================================================
+  
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      # File formatting
+      - id: trailing-whitespace
+        args: [--markdown-linebreak-ext=md]
+      - id: end-of-file-fixer
+      - id: mixed-line-ending
+        args: [--fix=lf]
+      
+      # JSON/YAML validation
+      - id: check-json
+      - id: check-yaml
+        args: [--unsafe]
+      - id: check-toml
+      
+      # Python specific
+      - id: check-ast
+      - id: check-builtin-literals
+      - id: check-docstring-first
+      - id: debug-statements
+      - id: name-tests-test
+        args: [--pytest-test-first]
+      
+      # Security
+      - id: check-added-large-files
+        args: [--maxkb=1000]
+      - id: check-merge-conflict
+      - id: check-executables-have-shebangs
+      - id: check-shebang-scripts-are-executable
+      
+      # Git
+      - id: check-case-conflict
+      - id: check-vcs-permalinks
+      - id: forbid-new-submodules
+      
+      # General
+      - id: check-symlinks
+      - id: destroyed-symlinks
+      - id: fix-byte-order-marker
+
+  # =============================================================================
+  # PYTHON CODE FORMATTING
+  # =============================================================================
+  
+  - repo: https://github.com/psf/black
+    rev: 23.12.1
+    hooks:
+      - id: black
+        language_version: python3
+        args: [--line-length=88, --target-version=py39]
+        exclude: ^(migrations/|venv/|\.venv/|env/|\.env/)
+
+  # =============================================================================
+  # IMPORT SORTING
+  # =============================================================================
+  
+  - repo: https://github.com/pycqa/isort
+    rev: 5.13.2
+    hooks:
+      - id: isort
+        args: [--profile=black, --line-length=88, --multi-line=3]
+        exclude: ^(migrations/|venv/|\.venv/|env/|\.env/)
+
+  # =============================================================================
+  # PYTHON LINTING
+  # =============================================================================
+  
+  - repo: https://github.com/pycqa/flake8
+    rev: 7.0.0
+    hooks:
+      - id: flake8
+        args: 
+          - --max-line-length=88
+          - --extend-ignore=E203,W503,E501
+          - --max-complexity=10
+        exclude: ^(migrations/|venv/|\.venv/|env/|\.env/|tests/fixtures/)
+        additional_dependencies:
+          - flake8-docstrings
+          - flake8-import-order
+          - flake8-bugbear
+          - flake8-comprehensions
+          - flake8-simplify
+
+  # =============================================================================
+  # TYPE CHECKING
+  # =============================================================================
+  
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.8.0
+    hooks:
+      - id: mypy
+        args: [--ignore-missing-imports, --strict-optional]
+        exclude: ^(tests/|migrations/|venv/|\.venv/|env/|\.env/)
+        additional_dependencies:
+          - types-requests
+          - types-PyYAML
+          - types-python-dateutil
+          - types-redis
+
+  # =============================================================================
+  # SECURITY SCANNING
+  # =============================================================================
+  
+  - repo: https://github.com/PyCQA/bandit
+    rev: 1.7.5
+    hooks:
+      - id: bandit
+        args: [-r, -f, json, -o, bandit-report.json]
+        exclude: ^(tests/|venv/|\.venv/|env/|\.env/)
+
+  # =============================================================================
+  # DEPENDENCY SECURITY
+  # =============================================================================
+  
+  - repo: https://github.com/Lucas-C/pre-commit-hooks-safety
+    rev: v1.3.2
+    hooks:
+      - id: python-safety-dependencies-check
+        args: [--ignore=70612]  # Ignore specific vulnerabilities if needed
+
+  # =============================================================================
+  # SECRETS DETECTION
+  # =============================================================================
+  
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: v1.4.0
+    hooks:
+      - id: detect-secrets
+        args: [--baseline, .secrets.baseline]
+        exclude: ^(\.env\.example|tests/fixtures/|package-lock\.json)$
+
+  # =============================================================================
+  # DOCUMENTATION
+  # =============================================================================
+  
+  - repo: https://github.com/pycqa/pydocstyle
+    rev: 6.3.0
+    hooks:
+      - id: pydocstyle
+        args: [--convention=google]
+        exclude: ^(tests/|migrations/|venv/|\.venv/|env/|\.env/)
+
+  # =============================================================================
+  # YAML/JSON FORMATTING
+  # =============================================================================
+  
+  - repo: https://github.com/pre-commit/mirrors-prettier
+    rev: v4.0.0-alpha.8
+    hooks:
+      - id: prettier
+        types_or: [yaml, json, markdown]
+        exclude: ^(\.github/|venv/|\.venv/|env/|\.env/)
+
+  # =============================================================================
+  # SHELL SCRIPTS
+  # =============================================================================
+  
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.9.0.6
+    hooks:
+      - id: shellcheck
+        args: [--severity=warning]
+
+  # =============================================================================
+  # DOCKERFILE LINTING
+  # =============================================================================
+  
+  - repo: https://github.com/hadolint/hadolint
+    rev: v2.12.0
+    hooks:
+      - id: hadolint-docker
+        args: [--ignore, DL3008, --ignore, DL3009]
+
+  # =============================================================================
+  # PYTHON REQUIREMENTS
+  # =============================================================================
+  
+  - repo: https://github.com/jazzband/pip-tools
+    rev: 7.3.0
+    hooks:
+      - id: pip-compile
+        name: pip-compile requirements.txt
+        args: [requirements.in, --output-file=requirements.txt]
+        files: ^requirements\.(in|txt)$
+      - id: pip-compile
+        name: pip-compile requirements-dev.txt
+        args: [requirements-dev.in, --output-file=requirements-dev.txt]
+        files: ^requirements-dev\.(in|txt)$
+
+  # =============================================================================
+  # COMMIT MESSAGE VALIDATION
+  # =============================================================================
+  
+  - repo: https://github.com/commitizen-tools/commitizen
+    rev: v3.13.0
+    hooks:
+      - id: commitizen
+        stages: [commit-msg]
+
+  # =============================================================================
+  # PYTHON UPGRADE SYNTAX
+  # =============================================================================
+  
+  - repo: https://github.com/asottile/pyupgrade
+    rev: v3.15.0
+    hooks:
+      - id: pyupgrade
+        args: [--py39-plus]
+        exclude: ^(migrations/|venv/|\.venv/|env/|\.env/)
+
+  # =============================================================================
+  # REMOVE UNUSED IMPORTS
+  # =============================================================================
+  
+  - repo: https://github.com/PyCQA/autoflake
+    rev: v2.2.1
+    hooks:
+      - id: autoflake
+        args:
+          - --in-place
+          - --remove-all-unused-imports
+          - --remove-unused-variables
+          - --remove-duplicate-keys
+          - --ignore-init-module-imports
+        exclude: ^(migrations/|venv/|\.venv/|env/|\.env/)
+
+  # =============================================================================
+  # PYTHON DOCSTRING FORMATTING
+  # =============================================================================
+  
+  - repo: https://github.com/PyCQA/docformatter
+    rev: v1.7.5
+    hooks:
+      - id: docformatter
+        args: [--in-place, --wrap-summaries=88, --wrap-descriptions=88]
+        exclude: ^(tests/|migrations/|venv/|\.venv/|env/|\.env/)
+
+  # =============================================================================
+  # LOCAL HOOKS
+  # =============================================================================
+  
+  - repo: local
+    hooks:
+      # Custom Python tests
+      - id: pytest-check
+        name: pytest-check
+        entry: pytest
+        language: system
+        pass_filenames: false
+        always_run: true
+        args: [--maxfail=1, -q, tests/]
+        stages: [push]
+      
+      # Custom linting for project-specific rules
+      - id: custom-lint
+        name: custom-lint
+        entry: python scripts/lint_custom.py
+        language: system
+        files: \.py$
+        exclude: ^(tests/|migrations/|venv/|\.venv/|env/|\.env/)
+      
+      # Check for TODO/FIXME comments in production code
+      - id: check-todos
+        name: check-todos
+        entry: bash -c 'if grep -r "TODO\|FIXME\|XXX\|HACK" src/ --include="*.py"; then echo "Found TODO/FIXME comments in production code"; exit 1; fi'
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [push]
+      
+      # Validate environment file template
+      - id: validate-env-template
+        name: validate-env-template
+        entry: python scripts/validate_env_template.py
+        language: system
+        files: ^\.env\.example$
+      
+      # Check for hardcoded secrets
+      - id: check-hardcoded-secrets
+        name: check-hardcoded-secrets
+        entry: bash -c 'if grep -r "password\s*=\s*[\"'\''][^\"'\'']*[\"'\'']" src/ --include="*.py"; then echo "Found hardcoded passwords"; exit 1; fi'
+        language: system
+        pass_filenames: false
+        always_run: true
+
+# =============================================================================
+# GLOBAL CONFIGURATION
+# =============================================================================
+
+# Global settings
+default_stages: [commit]
+fail_fast: false
+minimum_pre_commit_version: 3.5.0
+
+# CI configuration
+ci:
+  autofix_commit_msg: |
+    [pre-commit.ci] auto fixes from pre-commit hooks
+    
+    for more information, see https://pre-commit.ci
+  autofix_prs: true
+  autoupdate_branch: ''
+  autoupdate_commit_msg: '[pre-commit.ci] pre-commit autoupdate'
+  autoupdate_schedule: weekly
+  skip: []
+  submodules: false

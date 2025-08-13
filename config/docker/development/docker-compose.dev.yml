@@ -1,0 +1,308 @@
+# ViewTrendsSL Development Docker Compose Configuration
+# Complete development environment with all services
+
+version: '3.8'
+
+services:
+  # =============================================================================
+  # APPLICATION SERVICES
+  # =============================================================================
+  
+  app:
+    build:
+      context: ../../../
+      dockerfile: config/docker/development/Dockerfile.dev
+    container_name: viewtrendssl-app-dev
+    ports:
+      - "5000:5000"
+    volumes:
+      - ../../../:/app
+      - /app/__pycache__
+      - /app/.pytest_cache
+      - app-data:/app/data
+    environment:
+      - FLASK_ENV=development
+      - FLASK_DEBUG=1
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/viewtrendssl_dev
+      - REDIS_URL=redis://redis:6379/0
+      - YOUTUBE_API_KEY=${YOUTUBE_API_KEY}
+      - SECRET_KEY=${SECRET_KEY:-dev-secret-key}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - viewtrendssl-network
+    restart: unless-stopped
+    stdin_open: true
+    tty: true
+
+  # =============================================================================
+  # DATABASE SERVICES
+  # =============================================================================
+  
+  postgres:
+    image: postgres:15-alpine
+    container_name: viewtrendssl-postgres-dev
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=viewtrendssl_dev
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_INITDB_ARGS=--encoding=UTF-8 --lc-collate=C --lc-ctype=C
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./init-scripts:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d viewtrendssl_dev"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - viewtrendssl-network
+    restart: unless-stopped
+
+  # =============================================================================
+  # CACHE SERVICES
+  # =============================================================================
+  
+  redis:
+    image: redis:7-alpine
+    container_name: viewtrendssl-redis-dev
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+      - ./redis.conf:/usr/local/etc/redis/redis.conf
+    command: redis-server /usr/local/etc/redis/redis.conf
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - viewtrendssl-network
+    restart: unless-stopped
+
+  # =============================================================================
+  # DEVELOPMENT TOOLS
+  # =============================================================================
+  
+  jupyter:
+    build:
+      context: ../../../
+      dockerfile: config/docker/development/Dockerfile.dev
+    container_name: viewtrendssl-jupyter-dev
+    ports:
+      - "8888:8888"
+    volumes:
+      - ../../../:/app
+      - jupyter-data:/home/appuser/.jupyter
+    environment:
+      - JUPYTER_ENABLE_LAB=yes
+      - JUPYTER_TOKEN=${JUPYTER_TOKEN:-dev-token}
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/viewtrendssl_dev
+      - REDIS_URL=redis://redis:6379/0
+    command: >
+      bash -c "
+        pip install jupyterlab ipywidgets &&
+        jupyter lab --ip=0.0.0.0 --port=8888 --no-browser --allow-root
+        --NotebookApp.token='${JUPYTER_TOKEN:-dev-token}'
+        --NotebookApp.password=''
+      "
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - viewtrendssl-network
+    restart: unless-stopped
+
+  # =============================================================================
+  # MONITORING SERVICES
+  # =============================================================================
+  
+  adminer:
+    image: adminer:4.8.1
+    container_name: viewtrendssl-adminer-dev
+    ports:
+      - "8080:8080"
+    environment:
+      - ADMINER_DEFAULT_SERVER=postgres
+      - ADMINER_DESIGN=pepa-linha
+    depends_on:
+      - postgres
+    networks:
+      - viewtrendssl-network
+    restart: unless-stopped
+
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: viewtrendssl-redis-commander-dev
+    ports:
+      - "8081:8081"
+    environment:
+      - REDIS_HOSTS=local:redis:6379
+      - HTTP_USER=${REDIS_COMMANDER_USER:-admin}
+      - HTTP_PASSWORD=${REDIS_COMMANDER_PASSWORD:-admin}
+    depends_on:
+      - redis
+    networks:
+      - viewtrendssl-network
+    restart: unless-stopped
+
+  # =============================================================================
+  # DATA COLLECTION SERVICES
+  # =============================================================================
+  
+  data-collector:
+    build:
+      context: ../../../
+      dockerfile: config/docker/development/Dockerfile.dev
+    container_name: viewtrendssl-data-collector-dev
+    volumes:
+      - ../../../:/app
+      - app-data:/app/data
+    environment:
+      - FLASK_ENV=development
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/viewtrendssl_dev
+      - REDIS_URL=redis://redis:6379/0
+      - YOUTUBE_API_KEY=${YOUTUBE_API_KEY}
+      - YOUTUBE_API_KEY_2=${YOUTUBE_API_KEY_2}
+      - YOUTUBE_API_KEY_3=${YOUTUBE_API_KEY_3}
+    command: python scripts/data_collection/orchestrator.py
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - viewtrendssl-network
+    restart: unless-stopped
+    profiles:
+      - data-collection
+
+  # =============================================================================
+  # TESTING SERVICES
+  # =============================================================================
+  
+  test-runner:
+    build:
+      context: ../../../
+      dockerfile: config/docker/development/Dockerfile.dev
+    container_name: viewtrendssl-test-runner-dev
+    volumes:
+      - ../../../:/app
+    environment:
+      - FLASK_ENV=testing
+      - DATABASE_URL=postgresql://postgres:postgres@postgres-test:5432/viewtrendssl_test
+      - REDIS_URL=redis://redis-test:6379/0
+      - TESTING=true
+    command: pytest tests/ -v --cov=src --cov-report=html
+    depends_on:
+      postgres-test:
+        condition: service_healthy
+      redis-test:
+        condition: service_healthy
+    networks:
+      - viewtrendssl-network
+    profiles:
+      - testing
+
+  postgres-test:
+    image: postgres:15-alpine
+    container_name: viewtrendssl-postgres-test-dev
+    environment:
+      - POSTGRES_DB=viewtrendssl_test
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    volumes:
+      - postgres-test-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d viewtrendssl_test"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - viewtrendssl-network
+    profiles:
+      - testing
+
+  redis-test:
+    image: redis:7-alpine
+    container_name: viewtrendssl-redis-test-dev
+    volumes:
+      - redis-test-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - viewtrendssl-network
+    profiles:
+      - testing
+
+# =============================================================================
+# NETWORKS
+# =============================================================================
+
+networks:
+  viewtrendssl-network:
+    driver: bridge
+    name: viewtrendssl-dev-network
+
+# =============================================================================
+# VOLUMES
+# =============================================================================
+
+volumes:
+  postgres-data:
+    name: viewtrendssl-postgres-dev-data
+  postgres-test-data:
+    name: viewtrendssl-postgres-test-dev-data
+  redis-data:
+    name: viewtrendssl-redis-dev-data
+  redis-test-data:
+    name: viewtrendssl-redis-test-dev-data
+  app-data:
+    name: viewtrendssl-app-dev-data
+  jupyter-data:
+    name: viewtrendssl-jupyter-dev-data
+
+# =============================================================================
+# DEVELOPMENT COMMANDS
+# =============================================================================
+
+# Usage Examples:
+# 
+# Start all services:
+# docker-compose -f config/docker/development/docker-compose.dev.yml up -d
+#
+# Start only core services (app, postgres, redis):
+# docker-compose -f config/docker/development/docker-compose.dev.yml up -d app
+#
+# Start with data collection:
+# docker-compose -f config/docker/development/docker-compose.dev.yml --profile data-collection up -d
+#
+# Run tests:
+# docker-compose -f config/docker/development/docker-compose.dev.yml --profile testing up test-runner
+#
+# View logs:
+# docker-compose -f config/docker/development/docker-compose.dev.yml logs -f app
+#
+# Execute commands in running container:
+# docker-compose -f config/docker/development/docker-compose.dev.yml exec app bash
+#
+# Stop all services:
+# docker-compose -f config/docker/development/docker-compose.dev.yml down
+#
+# Stop and remove volumes:
+# docker-compose -f config/docker/development/docker-compose.dev.yml down -v

@@ -1,0 +1,219 @@
+# Testing Dockerfile for ViewTrendsSL
+# This container is optimized for running tests in CI/CD pipelines
+# and local development environments
+
+# Use Python 3.11 slim image for faster builds and smaller size
+FROM python:3.11-slim as base
+
+# Set environment variables for testing
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    TESTING=true \
+    ENVIRONMENT=test
+
+# Set working directory
+WORKDIR /app
+
+# Install system dependencies required for testing
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    curl \
+    git \
+    sqlite3 \
+    postgresql-client \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create non-root user for security
+RUN groupadd -r testuser && useradd -r -g testuser testuser
+
+# Copy requirements files
+COPY requirements.txt requirements-dev.txt requirements-prod.txt ./
+COPY tests/requirements-test.txt ./tests/
+
+# Install Python dependencies
+RUN pip install --no-cache-dir -r requirements-dev.txt && \
+    pip install --no-cache-dir -r tests/requirements-test.txt
+
+# Install additional testing tools
+RUN pip install --no-cache-dir \
+    pytest-xdist \
+    pytest-benchmark \
+    pytest-mock \
+    pytest-asyncio \
+    pytest-timeout \
+    pytest-randomly \
+    pytest-sugar \
+    pytest-clarity \
+    coverage[toml] \
+    bandit[toml] \
+    safety \
+    mypy \
+    black \
+    isort \
+    flake8 \
+    pre-commit
+
+# Copy source code
+COPY . .
+
+# Create necessary directories
+RUN mkdir -p /app/data/test \
+    /app/data/logs \
+    /app/data/models \
+    /app/coverage \
+    /app/test-results
+
+# Set proper permissions
+RUN chown -R testuser:testuser /app
+
+# Switch to non-root user
+USER testuser
+
+# Create test database directory
+RUN mkdir -p /app/data/test/db
+
+# Set up git for pre-commit (if needed)
+RUN git config --global user.email "test@viewtrendssl.com" && \
+    git config --global user.name "Test User"
+
+# Install pre-commit hooks
+RUN pre-commit install --install-hooks || true
+
+# Health check for the test container
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD python -c "import sys; sys.exit(0)"
+
+# Default command runs all tests
+CMD ["python", "-m", "pytest", "tests/", "-v", "--tb=short", "--strict-markers"]
+
+# Multi-stage build for different test scenarios
+FROM base as unit-tests
+CMD ["python", "-m", "pytest", "tests/unit/", "-v", "--tb=short", "--cov=src", "--cov-report=xml", "--cov-report=html", "--cov-report=term"]
+
+FROM base as integration-tests
+CMD ["python", "-m", "pytest", "tests/integration/", "-v", "--tb=short"]
+
+FROM base as performance-tests
+CMD ["python", "-m", "pytest", "tests/performance/", "-v", "--tb=short", "--benchmark-only"]
+
+FROM base as security-tests
+# Run security scans
+CMD ["sh", "-c", "bandit -r src/ -f json -o /app/test-results/bandit-report.json && safety check --json --output /app/test-results/safety-report.json"]
+
+FROM base as lint-tests
+# Run linting and formatting checks
+CMD ["sh", "-c", "black --check src/ tests/ && isort --check-only src/ tests/ && flake8 src/ tests/ && mypy src/"]
+
+FROM base as coverage-tests
+# Run tests with comprehensive coverage
+CMD ["python", "-m", "pytest", "tests/", "-v", "--cov=src", "--cov-report=xml:/app/coverage/coverage.xml", "--cov-report=html:/app/coverage/htmlcov", "--cov-report=term", "--cov-fail-under=80"]
+
+FROM base as ci-tests
+# Optimized for CI/CD pipelines
+ENV CI=true
+CMD ["sh", "-c", "\
+    echo 'Running linting...' && \
+    black --check src/ tests/ && \
+    isort --check-only src/ tests/ && \
+    flake8 src/ tests/ && \
+    echo 'Running security checks...' && \
+    bandit -r src/ -f json -o /app/test-results/bandit-report.json && \
+    safety check --json --output /app/test-results/safety-report.json && \
+    echo 'Running unit tests...' && \
+    python -m pytest tests/unit/ -v --tb=short --cov=src --cov-report=xml:/app/coverage/coverage.xml --cov-report=term --junitxml=/app/test-results/junit.xml && \
+    echo 'Running integration tests...' && \
+    python -m pytest tests/integration/ -v --tb=short --junitxml=/app/test-results/integration-junit.xml && \
+    echo 'All tests completed successfully!' \
+    "]
+
+# Development testing stage with hot reload
+FROM base as dev-tests
+# Install additional development tools
+USER root
+RUN pip install --no-cache-dir watchdog
+USER testuser
+
+# Watch for file changes and re-run tests
+CMD ["sh", "-c", "python -m pytest tests/ -v --tb=short -f"]
+
+# Parallel testing stage for faster execution
+FROM base as parallel-tests
+CMD ["python", "-m", "pytest", "tests/", "-v", "--tb=short", "-n", "auto", "--dist=worksteal"]
+
+# Database testing stage with PostgreSQL
+FROM base as db-tests
+USER root
+# Install PostgreSQL for integration tests
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    postgresql \
+    postgresql-contrib \
+    && rm -rf /var/lib/apt/lists/*
+
+USER testuser
+# Run tests that require database
+CMD ["python", "-m", "pytest", "tests/integration/test_database/", "-v", "--tb=short"]
+
+# API testing stage
+FROM base as api-tests
+# Run API-specific tests
+CMD ["python", "-m", "pytest", "tests/integration/test_api/", "-v", "--tb=short"]
+
+# Load testing stage
+FROM base as load-tests
+USER root
+RUN pip install --no-cache-dir locust
+USER testuser
+# Run load tests (if implemented)
+CMD ["python", "-m", "pytest", "tests/performance/", "-v", "--tb=short", "-k", "load"]
+
+# Final stage with all test capabilities
+FROM base as full-tests
+USER root
+
+# Install additional tools for comprehensive testing
+RUN pip install --no-cache-dir \
+    locust \
+    selenium \
+    requests-mock \
+    responses \
+    factory-boy \
+    faker
+
+# Install Chrome for Selenium tests (if needed)
+RUN curl -sSL https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb -o chrome.deb && \
+    apt-get update && \
+    apt-get install -y ./chrome.deb && \
+    rm chrome.deb && \
+    rm -rf /var/lib/apt/lists/*
+
+USER testuser
+
+# Comprehensive test suite
+CMD ["sh", "-c", "\
+    echo '=== ViewTrendsSL Test Suite ===' && \
+    echo 'Running code quality checks...' && \
+    black --check src/ tests/ && \
+    isort --check-only src/ tests/ && \
+    flake8 src/ tests/ && \
+    mypy src/ && \
+    echo 'Running security scans...' && \
+    bandit -r src/ && \
+    safety check && \
+    echo 'Running unit tests with coverage...' && \
+    python -m pytest tests/unit/ -v --cov=src --cov-report=term --cov-fail-under=70 && \
+    echo 'Running integration tests...' && \
+    python -m pytest tests/integration/ -v && \
+    echo 'Running performance tests...' && \
+    python -m pytest tests/performance/ -v --benchmark-only && \
+    echo 'All tests completed successfully!' \
+    "]
+
+# Labels for container metadata
+LABEL maintainer="ViewTrendsSL Team" \
+      version="1.0.0" \
+      description="Testing container for ViewTrendsSL application" \
+      org.opencontainers.image.source="https://github.com/L0rd008/ViewTrendsSL" \
+      org.opencontainers.image.documentation="https://github.com/L0rd008/ViewTrendsSL/blob/main/README.md" \
+      org.opencontainers.image.licenses="MIT"

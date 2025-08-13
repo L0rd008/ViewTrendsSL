@@ -1,0 +1,118 @@
+# ViewTrendsSL Production Dockerfile
+# Multi-stage build for optimized production deployment
+
+# =============================================================================
+# BUILD STAGE
+# =============================================================================
+
+FROM python:3.9-slim as builder
+
+# Set build arguments
+ARG BUILD_DATE
+ARG VCS_REF
+ARG VERSION
+
+# Set environment variables for build
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1
+
+# Install build dependencies
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    libpq-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create virtual environment
+RUN python -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+
+# Copy requirements and install Python dependencies
+COPY requirements-prod.txt /tmp/
+RUN pip install --upgrade pip && \
+    pip install -r /tmp/requirements-prod.txt && \
+    pip install gunicorn[gevent]
+
+# =============================================================================
+# PRODUCTION STAGE
+# =============================================================================
+
+FROM python:3.9-slim as production
+
+# Set build metadata
+LABEL maintainer="ViewTrendsSL Team <team@viewtrendssl.com>" \
+      org.label-schema.build-date=$BUILD_DATE \
+      org.label-schema.name="ViewTrendsSL" \
+      org.label-schema.description="YouTube Viewership Forecasting for Sri Lankan Content" \
+      org.label-schema.url="https://viewtrendssl.com" \
+      org.label-schema.vcs-ref=$VCS_REF \
+      org.label-schema.vcs-url="https://github.com/L0rd008/ViewTrendsSL" \
+      org.label-schema.vendor="ViewTrendsSL" \
+      org.label-schema.version=$VERSION \
+      org.label-schema.schema-version="1.0"
+
+# Set production environment variables
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PYTHONPATH=/app \
+    PATH="/opt/venv/bin:$PATH" \
+    FLASK_ENV=production \
+    GUNICORN_WORKERS=4 \
+    GUNICORN_WORKER_CLASS=gevent \
+    GUNICORN_WORKER_CONNECTIONS=1000 \
+    GUNICORN_MAX_REQUESTS=1000 \
+    GUNICORN_MAX_REQUESTS_JITTER=100 \
+    GUNICORN_TIMEOUT=30 \
+    GUNICORN_KEEPALIVE=2
+
+# Install runtime dependencies
+RUN apt-get update && apt-get install -y \
+    libpq5 \
+    curl \
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
+
+# Create app user and group
+RUN groupadd -r appuser && \
+    useradd -r -g appuser -d /app -s /bin/bash appuser
+
+# Copy virtual environment from builder stage
+COPY --from=builder /opt/venv /opt/venv
+
+# Set work directory
+WORKDIR /app
+
+# Copy application code
+COPY --chown=appuser:appuser . .
+
+# Create necessary directories and set permissions
+RUN mkdir -p /app/data/logs /app/data/models /app/data/raw /app/data/processed /app/data/backups && \
+    chown -R appuser:appuser /app && \
+    chmod -R 755 /app && \
+    chmod +x /app/scripts/deployment/docker/entrypoint.sh
+
+# Remove development files and unnecessary content
+RUN rm -rf \
+    /app/tests \
+    /app/notebooks \
+    /app/config/docker/development \
+    /app/config/docker/testing \
+    /app/.git* \
+    /app/requirements-dev.txt \
+    /app/.env.example \
+    /app/CONTRIBUTING.md
+
+# Switch to non-root user
+USER appuser
+
+# Expose port
+EXPOSE 8000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+    CMD curl -f http://localhost:8000/health || exit 1
+
+# Set entrypoint and default command
+ENTRYPOINT ["/app/scripts/deployment/docker/entrypoint.sh"]
+CMD ["gunicorn", "--config", "/app/config/docker/production/gunicorn.conf.py", "src.application.api.app:create_app()"]

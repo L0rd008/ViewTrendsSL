@@ -1,435 +1,424 @@
-# Tests Directory
+# ViewTrendsSL Testing Framework
 
-This directory contains comprehensive test suites for the ViewTrendsSL project, organized by testing type and scope.
+This directory contains the comprehensive testing suite for the ViewTrendsSL project, including unit tests, integration tests, fixtures, and testing utilities.
 
 ## 📁 Directory Structure
 
-### `/unit/` - Unit Tests
-**Purpose**: Test individual components in isolation
-**Framework**: pytest, unittest
-**Coverage Target**: >90% code coverage
-**Execution**: Fast, isolated, no external dependencies
-
-#### `/unit/test_services/`
-**Purpose**: Test business logic services
-**Files**:
-- `test_prediction_service.py` - Video prediction service tests
-- `test_data_collection_service.py` - Data collection service tests
-- `test_feature_engineering_service.py` - Feature engineering tests
-- `test_model_service.py` - ML model service tests
-- `test_analytics_service.py` - Analytics service tests
-
-**Test Examples**:
-```python
-def test_prediction_service_shorts():
-    """Test prediction service for YouTube Shorts"""
-    service = PredictionService()
-    video_data = create_mock_shorts_data()
-    prediction = service.predict_views(video_data)
-    assert prediction > 0
-    assert isinstance(prediction, dict)
-    assert 'views_24h' in prediction
+```
+tests/
+├── __init__.py                     # Test package initialization
+├── README.md                       # This file
+├── pytest.ini                     # Pytest configuration
+├── requirements-test.txt           # Testing dependencies
+├── fixtures/                       # Test fixtures and utilities
+│   ├── conftest.py                # Global pytest fixtures
+│   ├── mock_data.py               # Mock data generators
+│   └── test_database.py           # Database testing utilities
+├── unit/                          # Unit tests
+│   ├── test_services/             # Service layer tests
+│   └── test_ml/                   # ML component tests
+└── integration/                   # Integration tests
+    └── test_api_endpoints.py      # API endpoint tests
 ```
 
-#### `/unit/test_repositories/`
-**Purpose**: Test data access layer components
-**Files**:
-- `test_video_repository.py` - Video data repository tests
-- `test_channel_repository.py` - Channel data repository tests
-- `test_user_repository.py` - User data repository tests
-- `test_snapshot_repository.py` - Performance snapshot tests
+## 🚀 Quick Start
 
-**Test Examples**:
-```python
-def test_video_repository_create():
-    """Test video creation in repository"""
-    repo = VideoRepository()
-    video_data = create_test_video_data()
-    video_id = repo.create(video_data)
-    assert video_id is not None
-    retrieved = repo.get_by_id(video_id)
-    assert retrieved.title == video_data['title']
-```
+### 1. Install Testing Dependencies
 
-#### `/unit/test_ml/`
-**Purpose**: Test machine learning components
-**Files**:
-- `test_feature_engineer.py` - Feature engineering tests
-- `test_model_trainer.py` - Model training tests
-- `test_model_evaluator.py` - Model evaluation tests
-- `test_preprocessor.py` - Data preprocessing tests
-- `test_prediction_pipeline.py` - End-to-end prediction tests
-
-**Test Examples**:
-```python
-def test_feature_engineer_temporal_features():
-    """Test temporal feature extraction"""
-    engineer = FeatureEngineer()
-    video_data = create_test_video_with_timestamp()
-    features = engineer.extract_temporal_features(video_data)
-    assert 'publish_hour' in features
-    assert 'day_of_week' in features
-    assert 0 <= features['publish_hour'] <= 23
-```
-
-#### `/unit/test_utils/`
-**Purpose**: Test utility functions and helpers
-**Files**:
-- `test_data_validators.py` - Data validation utility tests
-- `test_api_helpers.py` - API helper function tests
-- `test_time_utils.py` - Time utility function tests
-- `test_config_manager.py` - Configuration management tests
-- `test_logging_utils.py` - Logging utility tests
-
-### `/integration/` - Integration Tests
-**Purpose**: Test component interactions and external integrations
-**Framework**: pytest with fixtures
-**Coverage**: Critical integration points
-**Execution**: Slower, may use external services (with mocking)
-
-#### `/integration/test_api/`
-**Purpose**: Test API endpoint integrations
-**Files**:
-- `test_prediction_endpoints.py` - Prediction API integration tests
-- `test_auth_endpoints.py` - Authentication API tests
-- `test_analytics_endpoints.py` - Analytics API tests
-- `test_middleware_integration.py` - Middleware integration tests
-
-**Test Examples**:
-```python
-def test_prediction_api_end_to_end():
-    """Test complete prediction API workflow"""
-    client = TestClient(app)
-    video_url = "https://youtube.com/watch?v=test123"
-    response = client.post("/api/predict", json={"video_url": video_url})
-    assert response.status_code == 200
-    data = response.json()
-    assert 'prediction' in data
-    assert 'confidence' in data
-```
-
-#### `/integration/test_database/`
-**Purpose**: Test database operations and transactions
-**Files**:
-- `test_database_operations.py` - Database CRUD operations
-- `test_migrations.py` - Database migration tests
-- `test_transaction_handling.py` - Transaction management tests
-- `test_connection_pooling.py` - Connection pool tests
-
-**Test Examples**:
-```python
-def test_video_channel_relationship():
-    """Test video-channel relationship integrity"""
-    with test_db_session() as session:
-        channel = create_test_channel(session)
-        video = create_test_video(session, channel_id=channel.id)
-        session.commit()
-        
-        retrieved_video = session.query(Video).filter_by(id=video.id).first()
-        assert retrieved_video.channel.id == channel.id
-```
-
-#### `/integration/test_external/`
-**Purpose**: Test external service integrations
-**Files**:
-- `test_youtube_api_integration.py` - YouTube API integration tests
-- `test_monitoring_integration.py` - Monitoring service tests
-- `test_cache_integration.py` - Cache service integration tests
-- `test_email_service.py` - Email notification tests
-
-**Test Examples**:
-```python
-@pytest.mark.integration
-def test_youtube_api_video_fetch():
-    """Test YouTube API video data fetching"""
-    api_client = YouTubeAPIClient()
-    video_id = "dQw4w9WgXcQ"  # Test video ID
-    video_data = api_client.get_video_details(video_id)
-    assert video_data is not None
-    assert video_data['id'] == video_id
-    assert 'title' in video_data
-```
-
-### `/fixtures/` - Test Data and Fixtures
-**Purpose**: Shared test data, fixtures, and utilities
-**Contents**: Mock data, test databases, fixture factories
-
-**Files**:
-- `conftest.py` - pytest configuration and shared fixtures
-- `mock_data.py` - Mock data generators
-- `test_database.py` - Test database setup and teardown
-- `api_fixtures.py` - API response fixtures
-- `model_fixtures.py` - ML model test fixtures
-
-**Example Fixtures**:
-```python
-@pytest.fixture
-def test_video_data():
-    """Fixture providing test video data"""
-    return {
-        'video_id': 'test123',
-        'title': 'Test Video Title',
-        'duration': 'PT3M45S',
-        'published_at': '2023-08-01T14:30:00Z',
-        'view_count': 1000,
-        'like_count': 50,
-        'comment_count': 10
-    }
-
-@pytest.fixture
-def mock_youtube_api():
-    """Fixture providing mocked YouTube API"""
-    with patch('src.external.youtube_api.YouTubeAPIClient') as mock:
-        mock.return_value.get_video_details.return_value = test_video_data()
-        yield mock
-```
-
-### `/performance/` - Performance Tests
-**Purpose**: Test system performance, load handling, and scalability
-**Framework**: pytest-benchmark, locust
-**Metrics**: Response time, throughput, resource usage
-
-**Files**:
-- `test_prediction_performance.py` - Prediction endpoint performance
-- `test_database_performance.py` - Database query performance
-- `test_model_inference_speed.py` - ML model inference speed
-- `test_concurrent_users.py` - Concurrent user handling
-- `load_test_scenarios.py` - Load testing scenarios
-
-**Performance Test Examples**:
-```python
-def test_prediction_response_time(benchmark):
-    """Test prediction API response time"""
-    def make_prediction():
-        service = PredictionService()
-        return service.predict_views(test_video_data)
-    
-    result = benchmark(make_prediction)
-    assert result is not None
-    # Benchmark automatically measures execution time
-
-def test_concurrent_predictions():
-    """Test handling multiple concurrent predictions"""
-    import concurrent.futures
-    
-    def make_prediction(video_data):
-        service = PredictionService()
-        return service.predict_views(video_data)
-    
-    with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
-        futures = [executor.submit(make_prediction, test_video_data) 
-                  for _ in range(100)]
-        results = [f.result() for f in futures]
-    
-    assert len(results) == 100
-    assert all(r is not None for r in results)
-```
-
-## 🧪 Testing Standards
-
-### Test Organization
-- **One test file per source file**: `src/services/prediction.py` → `tests/unit/test_services/test_prediction.py`
-- **Descriptive test names**: Use `test_function_name_expected_behavior` format
-- **Arrange-Act-Assert pattern**: Clear test structure
-- **Single assertion per test**: Focus on one behavior per test
-
-### Test Data Management
-- **Use fixtures**: Centralize test data creation
-- **Isolate tests**: Each test should be independent
-- **Clean up**: Ensure tests clean up after themselves
-- **Realistic data**: Use data that resembles production data
-
-### Mocking Strategy
-- **Mock external dependencies**: APIs, databases, file systems
-- **Don't mock what you own**: Test your own code without mocking
-- **Mock at boundaries**: Mock at the edge of your system
-- **Verify interactions**: Assert that mocks are called correctly
-
-## 🚀 Running Tests
-
-### Local Development
 ```bash
-# Run all tests
+# Install test dependencies
+pip install -r tests/requirements-test.txt
+
+# Or install with main dependencies
+pip install -r requirements.txt -r tests/requirements-test.txt
+```
+
+### 2. Run All Tests
+
+```bash
+# Run all tests with coverage
 pytest
 
-# Run specific test category
-pytest tests/unit/
-pytest tests/integration/
-pytest tests/performance/
+# Run with verbose output
+pytest -v
 
-# Run with coverage
-pytest --cov=src --cov-report=html
-
-# Run specific test file
-pytest tests/unit/test_services/test_prediction_service.py
-
-# Run tests matching pattern
-pytest -k "test_prediction"
+# Run specific test categories
+pytest -m unit          # Unit tests only
+pytest -m integration   # Integration tests only
+pytest -m api          # API tests only
 ```
 
-### Continuous Integration
-```bash
-# Fast test suite (unit tests only)
-pytest tests/unit/ --maxfail=1
+### 3. Generate Coverage Report
 
-# Full test suite
-pytest tests/ --cov=src --cov-fail-under=90
-
-# Performance regression tests
-pytest tests/performance/ --benchmark-only
-```
-
-### Test Configuration
-```ini
-# pytest.ini
-[tool:pytest]
-testpaths = tests
-python_files = test_*.py
-python_classes = Test*
-python_functions = test_*
-addopts = 
-    --strict-markers
-    --disable-warnings
-    --tb=short
-markers =
-    unit: Unit tests
-    integration: Integration tests
-    performance: Performance tests
-    slow: Slow running tests
-```
-
-## 📊 Test Coverage
-
-### Coverage Targets
-- **Overall Coverage**: >90%
-- **Critical Components**: >95%
-- **New Code**: 100%
-- **Integration Points**: >85%
-
-### Coverage Reports
 ```bash
 # Generate HTML coverage report
 pytest --cov=src --cov-report=html
 
-# Generate terminal coverage report
-pytest --cov=src --cov-report=term-missing
-
-# Generate XML coverage report (for CI)
-pytest --cov=src --cov-report=xml
+# View coverage report
+open tests/coverage_html/index.html
 ```
 
-### Coverage Exclusions
-```python
-# .coveragerc
-[run]
-source = src
-omit = 
-    */tests/*
-    */venv/*
-    */migrations/*
-    */conftest.py
+## 🧪 Test Categories
 
-[report]
-exclude_lines =
-    pragma: no cover
-    def __repr__
-    raise AssertionError
-    raise NotImplementedError
-```
+### Unit Tests (`tests/unit/`)
 
-## 🔧 Test Utilities
+Test individual components in isolation:
 
-### Custom Assertions
-```python
-def assert_valid_prediction(prediction):
-    """Assert that prediction has valid structure"""
-    assert isinstance(prediction, dict)
-    assert 'views_24h' in prediction
-    assert 'views_7d' in prediction
-    assert 'confidence' in prediction
-    assert 0 <= prediction['confidence'] <= 1
+- **Service Tests**: Business logic and service layer functionality
+- **ML Tests**: Machine learning models and feature engineering
+- **Utility Tests**: Helper functions and utilities
 
-def assert_video_data_complete(video_data):
-    """Assert that video data has all required fields"""
-    required_fields = ['video_id', 'title', 'duration', 'published_at']
-    for field in required_fields:
-        assert field in video_data
-        assert video_data[field] is not None
-```
-
-### Test Helpers
-```python
-class TestDataBuilder:
-    """Builder pattern for creating test data"""
-    
-    def __init__(self):
-        self.data = {}
-    
-    def with_video_id(self, video_id):
-        self.data['video_id'] = video_id
-        return self
-    
-    def with_title(self, title):
-        self.data['title'] = title
-        return self
-    
-    def build(self):
-        return self.data.copy()
-
-# Usage
-video_data = (TestDataBuilder()
-              .with_video_id('test123')
-              .with_title('Test Video')
-              .build())
-```
-
-## 🎯 Best Practices
-
-### Writing Effective Tests
-1. **Test behavior, not implementation**: Focus on what the code does, not how
-2. **Use descriptive names**: Test names should explain the scenario
-3. **Keep tests simple**: Each test should be easy to understand
-4. **Test edge cases**: Include boundary conditions and error cases
-5. **Maintain tests**: Update tests when code changes
-
-### Test Maintenance
-1. **Regular review**: Review and update tests regularly
-2. **Remove obsolete tests**: Delete tests for removed functionality
-3. **Refactor test code**: Apply same quality standards as production code
-4. **Document complex tests**: Add comments for complex test scenarios
-5. **Monitor test performance**: Keep test suite execution time reasonable
-
-### Debugging Failed Tests
-1. **Read the error message**: Understand what the test is checking
-2. **Check test data**: Verify test data is correct and up-to-date
-3. **Run in isolation**: Run failing test alone to isolate the issue
-4. **Use debugger**: Step through code to understand the failure
-5. **Check recent changes**: Consider what code changes might have caused the failure
-
-## 🔄 Continuous Testing
-
-### Pre-commit Hooks
 ```bash
-# Install pre-commit hooks
-pre-commit install
+# Run unit tests
+pytest tests/unit/ -v
 
-# Run hooks manually
-pre-commit run --all-files
+# Run specific unit test files
+pytest tests/unit/test_services/test_prediction_service.py -v
+pytest tests/unit/test_ml/test_feature_extractor.py -v
 ```
 
-### CI/CD Integration
-```yaml
-# GitHub Actions example
-- name: Run Tests
-  run: |
-    pytest tests/unit/ --cov=src
-    pytest tests/integration/
-    pytest tests/performance/ --benchmark-only
+### Integration Tests (`tests/integration/`)
+
+Test component interactions and API endpoints:
+
+- **API Endpoint Tests**: Complete request-response cycles
+- **Database Integration**: Real database operations
+- **End-to-End Workflows**: Complete user journeys
+
+```bash
+# Run integration tests
+pytest tests/integration/ -v
+
+# Run API tests specifically
+pytest tests/integration/test_api_endpoints.py -v
 ```
 
-### Test Automation
-- **Automated test execution**: Run tests on every commit
-- **Test result reporting**: Generate and publish test reports
-- **Performance monitoring**: Track test execution time trends
-- **Coverage tracking**: Monitor code coverage over time
-- **Failure notifications**: Alert team of test failures
+## 🔧 Test Configuration
+
+### Pytest Configuration (`pytest.ini`)
+
+Key configuration options:
+
+- **Coverage**: Minimum 80% coverage required
+- **Markers**: Organized test categorization
+- **Timeouts**: 300-second test timeout
+- **Output**: Verbose reporting with coverage
+
+### Test Markers
+
+Use markers to categorize and run specific test types:
+
+```bash
+pytest -m "unit and prediction"     # Unit tests for prediction
+pytest -m "integration and api"     # Integration API tests
+pytest -m "not slow"               # Skip slow tests
+pytest -m "database"               # Database-related tests
+```
+
+Available markers:
+- `unit`: Unit tests
+- `integration`: Integration tests
+- `slow`: Slow running tests
+- `api`: API endpoint tests
+- `database`: Database related tests
+- `ml`: Machine learning tests
+- `auth`: Authentication tests
+- `prediction`: Prediction service tests
+- `analytics`: Analytics service tests
+- `data_collection`: Data collection tests
+- `feature_engineering`: Feature engineering tests
+- `performance`: Performance tests
+- `security`: Security tests
+
+## 🛠️ Test Utilities
+
+### Mock Data Generation (`fixtures/mock_data.py`)
+
+Generate realistic test data:
+
+```python
+from tests.fixtures.mock_data import (
+    generate_mock_video_data,
+    generate_mock_channel_data,
+    generate_video_id
+)
+
+# Generate mock video data
+video_data = generate_mock_video_data(is_short=True)
+channel_data = generate_mock_channel_data()
+```
+
+### Database Testing (`fixtures/test_database.py`)
+
+Temporary test databases:
+
+```python
+from tests.fixtures.test_database import temporary_test_database
+
+# Use temporary database in tests
+with temporary_test_database('mixed') as db:
+    # Test database operations
+    result = db.execute_query("SELECT * FROM videos")
+```
+
+### Global Fixtures (`fixtures/conftest.py`)
+
+Shared test fixtures:
+
+```python
+# Available fixtures:
+# - sample_video_data
+# - sample_channel_data
+# - mock_youtube_api
+# - test_database
+# - authenticated_user
+```
+
+## 📊 Coverage Requirements
+
+### Minimum Coverage Targets
+
+- **Overall**: 80% minimum coverage
+- **Critical Components**: 90%+ coverage
+  - Prediction services
+  - ML models
+  - API endpoints
+  - Data validation
+
+### Coverage Reports
+
+```bash
+# Generate different coverage report formats
+pytest --cov=src --cov-report=html      # HTML report
+pytest --cov=src --cov-report=term      # Terminal report
+pytest --cov=src --cov-report=xml       # XML report (for CI)
+```
+
+## 🔍 Testing Best Practices
+
+### 1. Test Structure
+
+Follow the AAA pattern:
+- **Arrange**: Set up test data and conditions
+- **Act**: Execute the code being tested
+- **Assert**: Verify the results
+
+```python
+def test_prediction_service():
+    # Arrange
+    video_data = generate_mock_video_data()
+    service = PredictionService()
+    
+    # Act
+    result = service.predict_viewership(video_data)
+    
+    # Assert
+    assert result['confidence_score'] > 0
+    assert 'predicted_views_24h' in result
+```
+
+### 2. Test Isolation
+
+- Each test should be independent
+- Use fixtures for setup and teardown
+- Mock external dependencies
+
+### 3. Descriptive Test Names
+
+```python
+def test_prediction_service_returns_valid_forecast_for_shorts():
+    """Test that prediction service returns valid forecast for short videos."""
+    pass
+
+def test_feature_extractor_handles_missing_description_gracefully():
+    """Test that feature extractor handles missing video description."""
+    pass
+```
+
+### 4. Mock External Dependencies
+
+```python
+@patch('src.business.services.prediction.prediction_service.YouTubeAPI')
+def test_prediction_with_mocked_api(mock_api):
+    mock_api.return_value.get_video_data.return_value = mock_data
+    # Test implementation
+```
+
+## 🚨 Continuous Integration
+
+### GitHub Actions Integration
+
+Tests run automatically on:
+- Pull requests
+- Pushes to main branch
+- Scheduled runs (daily)
+
+### Test Commands for CI
+
+```bash
+# Install dependencies
+pip install -r requirements.txt -r tests/requirements-test.txt
+
+# Run tests with coverage
+pytest --cov=src --cov-report=xml --cov-fail-under=80
+
+# Run security tests
+bandit -r src/
+safety check
+
+# Run code quality checks
+flake8 src/
+black --check src/
+isort --check-only src/
+mypy src/
+```
+
+## 🐛 Debugging Tests
+
+### Running Individual Tests
+
+```bash
+# Run specific test
+pytest tests/unit/test_services/test_prediction_service.py::TestPredictionService::test_predict_viewership -v
+
+# Run with debugging
+pytest --pdb tests/unit/test_services/test_prediction_service.py
+
+# Run with print statements
+pytest -s tests/unit/test_services/test_prediction_service.py
+```
+
+### Common Issues
+
+1. **Import Errors**: Ensure PYTHONPATH includes project root
+2. **Database Errors**: Check test database setup
+3. **Mock Issues**: Verify mock paths and return values
+4. **Fixture Errors**: Check fixture dependencies and scope
+
+## 📈 Performance Testing
+
+### Benchmark Tests
+
+```bash
+# Run performance benchmarks
+pytest --benchmark-only
+
+# Generate benchmark report
+pytest --benchmark-histogram
+```
+
+### Load Testing
+
+```bash
+# Run load tests (requires locust)
+locust -f tests/load/locustfile.py --host=http://localhost:5000
+```
+
+## 🔒 Security Testing
+
+### Security Test Suite
+
+```bash
+# Run security tests
+pytest -m security
+
+# Run bandit security linter
+bandit -r src/
+
+# Check for known vulnerabilities
+safety check
+```
+
+## 📝 Writing New Tests
+
+### 1. Choose Test Type
+
+- **Unit Test**: Testing individual functions/methods
+- **Integration Test**: Testing component interactions
+- **End-to-End Test**: Testing complete workflows
+
+### 2. Create Test File
+
+```python
+"""
+Test module for [component name]
+
+Description of what this module tests.
+"""
+
+import pytest
+from unittest.mock import Mock, patch
+
+from src.path.to.component import ComponentClass
+from tests.fixtures.mock_data import generate_mock_data
+
+
+class TestComponentClass:
+    """Test cases for ComponentClass."""
+    
+    @pytest.fixture
+    def component(self):
+        """Create component instance for testing."""
+        return ComponentClass()
+    
+    def test_method_name(self, component):
+        """Test description."""
+        # Arrange
+        test_data = generate_mock_data()
+        
+        # Act
+        result = component.method(test_data)
+        
+        # Assert
+        assert result is not None
+        assert isinstance(result, dict)
+```
+
+### 3. Add Appropriate Markers
+
+```python
+@pytest.mark.unit
+@pytest.mark.prediction
+def test_prediction_functionality():
+    """Test prediction functionality."""
+    pass
+```
+
+## 🤝 Contributing to Tests
+
+### Before Submitting
+
+1. **Run Full Test Suite**: `pytest`
+2. **Check Coverage**: Ensure new code has adequate coverage
+3. **Follow Naming Conventions**: Use descriptive test names
+4. **Add Documentation**: Document complex test scenarios
+5. **Update Fixtures**: Add new mock data if needed
+
+### Test Review Checklist
+
+- [ ] Tests are isolated and independent
+- [ ] External dependencies are mocked
+- [ ] Edge cases are covered
+- [ ] Error conditions are tested
+- [ ] Performance implications considered
+- [ ] Security aspects addressed
+
+## 📚 Additional Resources
+
+- [Pytest Documentation](https://docs.pytest.org/)
+- [Python Testing Best Practices](https://realpython.com/python-testing/)
+- [Flask Testing Guide](https://flask.palletsprojects.com/en/2.3.x/testing/)
+- [Mock Library Documentation](https://docs.python.org/3/library/unittest.mock.html)
+
+## 🆘 Getting Help
+
+If you encounter issues with tests:
+
+1. Check this README for common solutions
+2. Review existing test examples
+3. Ask team members for guidance
+4. Create an issue with detailed error information
+
+---
+
+**Happy Testing! 🧪✨**
