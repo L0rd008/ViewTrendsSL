@@ -1,0 +1,52 @@
+================================================================================
+VIEWTRENDSSL MODEL TRAINING REPORT
+================================================================================
+
+TRAINING SUMMARY:
+  Total samples: 12,534
+  Shorts samples: 3,605
+  Long-form samples: 8,929
+  Targets trained: views_at_24h, views_at_7d, views_at_30d
+  Training timestamp: 2025-09-08T01:18:03.120841
+
+SHORTS MODEL PERFORMANCE:
+  views_at_24h:
+    Validation MAPE: 242.58%
+    Validation R²: 0.9229
+    Validation RMSE: 4801.16
+    Training samples: 2,884
+    Validation samples: 721
+  views_at_7d:
+    Validation MAPE: 17756.45%
+    Validation R²: 0.7839
+    Validation RMSE: 15151.48
+    Training samples: 2,884
+    Validation samples: 721
+  views_at_30d:
+    Validation MAPE: 0.00%
+    Validation R²: 1.0000
+    Validation RMSE: 0.00
+    Training samples: 2,884
+    Validation samples: 721
+
+LONG-FORM MODEL PERFORMANCE:
+  views_at_24h:
+    Validation MAPE: 414.45%
+    Validation R²: 0.9907
+    Validation RMSE: 4469.94
+    Training samples: 7,143
+    Validation samples: 1,786
+  views_at_7d:
+    Validation MAPE: 2914.59%
+    Validation R²: 0.9942
+    Validation RMSE: 4765.43
+    Training samples: 7,143
+    Validation samples: 1,786
+  views_at_30d:
+    Validation MAPE: 0.00%
+    Validation R²: 1.0000
+    Validation RMSE: 0.00
+    Training samples: 7,143
+    Validation samples: 1,786
+
+================================================================================

@@ -65,8 +65,6 @@ This Development Guide serves as the **single source of truth** for implementing
     - [12.1 MVP Completion Checklist](#121-mvp-completion-checklist)
     - [12.2 Success Criteria](#122-success-criteria)
   - [Conclusion](#conclusion)
-  - [Conclusion](#conclusion-1)
-  - [Conclusion](#conclusion-2)
     - [12.2 Success Criteria](#122-success-criteria-1)
     - [12.2 Success Criteria](#122-success-criteria-2)
 
@@ -420,7 +418,7 @@ mypy==1.5.1
 # Security
 bcrypt==4.0.1
 pyjwt==2.8.0
-cryptography==41.0.4
+cryptography==41.0.8
 ```
 
 **pyproject.toml**

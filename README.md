@@ -27,19 +27,19 @@ The project follows a **Layered Architecture** pattern for maximum scalability a
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                    Presentation Layer                        │
+│                    Presentation Layer                       │
 │              (Streamlit Web Interface)                      │
 ├─────────────────────────────────────────────────────────────┤
-│                    Application Layer                         │
+│                    Application Layer                        │
 │                 (Flask REST API)                            │
 ├─────────────────────────────────────────────────────────────┤
-│                    Business Layer                            │
+│                    Business Layer                           │
 │         (ML Models, Feature Engineering, Services)          │
 ├─────────────────────────────────────────────────────────────┤
-│                  Data Access Layer                           │
+│                  Data Access Layer                          │
 │              (SQLAlchemy, Repositories)                     │
 ├─────────────────────────────────────────────────────────────┤
-│                   External Layer                             │
+│                   External Layer                            │
 │            (YouTube API, Monitoring Services)               │
 └─────────────────────────────────────────────────────────────┘
 ```

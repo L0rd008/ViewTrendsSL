@@ -1,0 +1,235 @@
+Missing Values Summary:
+2025-09-07 04:59:24,012 - INFO -                         Missing_Count  Missing_Percentage
+day_30_views                    15112          100.000000
+day_30_comments                 15112          100.000000
+day_30_likes                    15112          100.000000
+day_29_views                    14894           98.557438
+day_29_comments                 14894           98.557438
+day_29_likes                    14894           98.557438
+day_28_views                    14302           94.640021
+day_28_comments                 14302           94.640021
+day_28_likes                    14302           94.640021
+day_27_likes                    13774           91.146109
+day_27_comments                 13774           91.146109
+day_27_views                    13774           91.146109
+day_26_views                    13286           87.916887
+day_26_comments                 13286           87.916887
+day_26_likes                    13286           87.916887
+day_25_likes                    12826           84.872949
+day_25_comments                 12826           84.872949
+day_25_views                    12826           84.872949
+day_24_views                    12327           81.570937
+day_24_comments                 12327           81.570937
+day_24_likes                    12327           81.570937
+day_23_likes                    11769           77.878507
+day_23_comments                 11769           77.878507
+day_23_views                    11769           77.878507
+day_22_views                    11223           74.265484
+day_22_comments                 11223           74.265484
+day_22_likes                    11223           74.265484
+day_21_views                    10659           70.533351
+day_21_comments                 10659           70.533351
+day_21_likes                    10659           70.533351
+day_20_views                    10100           66.834304
+day_20_comments                 10100           66.834304
+day_20_likes                    10100           66.834304
+day_19_likes                     9585           63.426416
+day_19_comments                  9585           63.426416
+day_19_views                     9585           63.426416
+day_18_views                     9152           60.561143
+day_18_comments                  9152           60.561143
+day_18_likes                     9152           60.561143
+day_17_likes                     8659           57.298835
+day_17_comments                  8659           57.298835
+day_17_views                     8659           57.298835
+day_16_views                     8134           53.824775
+day_16_comments                  8134           53.824775
+day_16_likes                     8134           53.824775
+day_15_likes                     7553           49.980148
+day_15_comments                  7553           49.980148
+day_15_views                     7553           49.980148
+day_14_views                     6985           46.221546
+day_14_likes                     6985           46.221546
+day_14_comments                  6985           46.221546
+day_13_views                     6513           43.098200
+day_13_likes                     6513           43.098200
+day_13_comments                  6513           43.098200
+day_12_views                     6010           39.769719
+day_12_likes                     6010           39.769719
+day_12_comments                  6010           39.769719
+day_11_likes                     5571           36.864743
+day_11_views                     5571           36.864743
+day_11_comments                  5571           36.864743
+default_language                 5171           34.217840
+day_10_comments                  5082           33.628904
+day_10_likes                     5082           33.628904
+day_10_views                     5082           33.628904
+day_9_views                      4542           30.055585
+day_9_likes                      4542           30.055585
+day_9_comments                   4542           30.055585
+day_8_likes                      3961           26.210958
+day_8_views                      3961           26.210958
+day_8_comments                   3961           26.210958
+day_7_views                      3417           22.611170
+day_7_comments                   3417           22.611170
+day_7_likes                      3417           22.611170
+day_6_comments                   2839           18.786395
+day_6_likes                      2839           18.786395
+day_6_views                      2839           18.786395
+day_5_comments                   2321           15.358655
+day_5_likes                      2321           15.358655
+day_5_views                      2321           15.358655
+day_4_comments                   1914           12.665431
+day_4_likes                      1914           12.665431
+day_4_views                      1914           12.665431
+description                      1658           10.971413
+localized_description            1658           10.971413
+day_3_comments                   1497            9.906035
+day_3_likes                      1497            9.906035
+day_3_views                      1497            9.906035
+default_audio_language           1326            8.774484
+day_2_views                      1020            6.749603
+day_2_comments                   1020            6.749603
+day_2_likes                      1020            6.749603
+day_1_views                       400            2.646903
+day_1_likes                       400            2.646903
+day_1_comments                    400            2.646903
+duration_category                 271            1.793277
+duration_iso8601                   96            0.635257
+2025-09-07 04:59:25,150 - INFO - Saved missing values analysis to ./eda_outputs/missing_values_analysis.png
+2025-09-07 04:59:25,154 - INFO - 
+Duplicate videos found: 0
+2025-09-07 04:59:25,154 - INFO -
+Data Types Summary:
+2025-09-07 04:59:25,158 - INFO - float64           93
+object            14
+int64              4
+string[python]     3
+Int64              2
+int32              2
+datetime64[ns]     1
+bool               1
+category           1
+2025-09-07 04:59:25,159 - INFO - ============================================================        
+2025-09-07 04:59:25,159 - INFO - DESCRIPTIVE STATISTICS
+2025-09-07 04:59:25,159 - INFO - ============================================================        
+2025-09-07 04:59:25,180 - INFO - Overall Statistics:
+2025-09-07 04:59:25,182 - INFO -          view_count     like_count  comment_count  duration_seconds     like_rate  comment_rate  engagement_rate
+count  1.511200e+04   15112.000000   15112.000000      15112.000000  15112.000000  15112.000000     15112.000000
+mean   1.717853e+04     331.516874      32.513433        567.907888      0.023024      0.004553         0.027577
+std    1.080637e+05    2111.870795     122.155761       1659.927479      0.057065      0.016041         0.061437
+min    0.000000e+00       0.000000       0.000000          0.000000      0.000000      0.000000         0.000000
+25%    3.460000e+02       3.000000       0.000000         51.000000      0.006816      0.000000         0.008711
+50%    1.201000e+03      15.000000       2.000000        111.000000      0.012318      0.000786         0.016016
+75%    5.965750e+03      99.000000      13.000000        298.000000      0.022871      0.004445         0.027125
+max    9.577878e+06  168277.000000    4000.000000      31517.000000      3.000000      1.000000         3.000000
+2025-09-07 04:59:25,184 - INFO -
+Content Type Distribution:
+2025-09-07 04:59:25,185 - INFO - Long-form: 10,549 videos (69.8%)
+2025-09-07 04:59:25,185 - INFO - Shorts: 4,563 videos (30.2%)
+2025-09-07 04:59:25,185 - INFO -
+Shorts vs Long-form Comparison:
+2025-09-07 04:59:25,214 - INFO - 
+Shorts Statistics:
+2025-09-07 04:59:25,216 - INFO -          view_count     like_count  comment_count    like_rate  comment_rate
+count  4.563000e+03    4563.000000    4563.000000  4563.000000   4563.000000
+mean   1.097885e+04     212.007451       6.508657     0.019694      0.002205
+std    1.566647e+05    2999.849109      32.127481     0.047154      0.010404
+min    0.000000e+00       0.000000       0.000000     0.000000      0.000000
+25%    2.210000e+02       2.000000       0.000000     0.004427      0.000000
+50%    9.030000e+02       8.000000       0.000000     0.009808      0.000000
+75%    2.829000e+03      40.500000       3.000000     0.019739      0.001298
+max    9.577878e+06  168277.000000     719.000000     1.000000      0.400000
+2025-09-07 04:59:25,217 - INFO -
+Long-form Statistics:
+2025-09-07 04:59:25,218 - INFO -          view_count    like_count  comment_count     like_rate  comment_rate
+count  1.054900e+04  10549.000000   10549.000000  10549.000000  10549.000000
+mean   1.986022e+04    383.211015      43.761873      0.024465      0.005568
+std    7.804153e+04   1577.471116     143.219109      0.060799      0.017844
+min    0.000000e+00      0.000000       0.000000      0.000000      0.000000
+25%    4.030000e+02      5.000000       0.000000      0.007849      0.000000
+50%    1.442000e+03     22.000000       3.000000      0.013437      0.001493
+75%    7.760000e+03    137.000000      23.000000      0.023810      0.005788
+max    2.448266e+06  27811.000000    4000.000000      3.000000      1.000000
+2025-09-07 04:59:25,218 - INFO -
+Statistical Significance Tests (Shorts vs Long-form):
+2025-09-07 04:59:25,236 - INFO - view_count: p-value = 0.000000 ***
+2025-09-07 04:59:25,254 - INFO - like_count: p-value = 0.000000 ***
+2025-09-07 04:59:25,270 - INFO - comment_count: p-value = 0.000000 ***
+2025-09-07 04:59:25,290 - INFO - like_rate: p-value = 0.000000 ***
+2025-09-07 04:59:25,310 - INFO - comment_rate: p-value = 0.000000 ***
+2025-09-07 04:59:25,310 - INFO - ============================================================        
+2025-09-07 04:59:25,310 - INFO - CONTENT TYPE COMPARISON VISUALIZATIONS
+2025-09-07 04:59:25,311 - INFO - ============================================================        
+2025-09-07 04:59:27,932 - INFO - Saved content comparison analysis to ./eda_outputs/content_comparison_analysis.png
+2025-09-07 04:59:27,932 - INFO - ============================================================
+2025-09-07 04:59:27,932 - INFO - ADVANCED TIME-SERIES ANALYSIS
+2025-09-07 04:59:27,933 - INFO - ============================================================        
+2025-09-07 04:59:27,933 - INFO - Found 30 days of view data
+2025-09-07 04:59:29,360 - INFO - Growth Pattern Distribution:
+2025-09-07 04:59:29,361 - INFO - Steady Growth: 14,703 videos (97.3%)
+2025-09-07 04:59:29,362 - INFO - Flash in Pan: 270 videos (1.8%)
+2025-09-07 04:59:29,362 - INFO - Viral Spike: 138 videos (0.9%)
+2025-09-07 04:59:29,362 - INFO - Slow Burn: 1 videos (0.0%)
+2025-09-07 04:59:31,092 - INFO - Saved advanced time-series analysis to ./eda_outputs/advanced_timeseries_analysis.png
+2025-09-07 04:59:31,093 - INFO - ============================================================
+2025-09-07 04:59:31,093 - INFO - PUBLICATION TIMING ANALYSIS
+2025-09-07 04:59:31,093 - INFO - ============================================================        
+2025-09-07 04:59:31,100 - INFO - Performance by Hour of Day:
+2025-09-07 04:59:31,104 - INFO -              view_count               engagement_rate
+                   mean  median count            mean median
+publish_hour
+0               9235.21  1205.0   173            0.02   0.01
+1               6407.91   654.0   264            0.05   0.02
+2               4823.43   809.0   651            0.03   0.02
+3               6001.14   736.0   580            0.02   0.02
+4               6469.21   816.0   723            0.02   0.01
+5               7356.82  1058.0   875            0.02   0.01
+6               8773.76  1238.0   813            0.02   0.01
+7              23589.45  1830.0  1053            0.02   0.02
+8              11533.13  1127.0  1011            0.02   0.02
+9               9900.35  1095.0   912            0.03   0.02
+10             11767.01  1488.0   902            0.03   0.02
+11             11062.06  1348.5   862            0.03   0.02
+12              9221.73  1313.5   850            0.03   0.02
+13             17810.06  2669.5   810            0.03   0.02
+14             24829.12  2386.0  1077            0.03   0.02
+15             87133.69  1665.0   889            0.03   0.02
+16             21030.22   813.0   821            0.03   0.02
+17             12274.02  1025.5   720            0.03   0.01
+18              7469.40   733.0   487            0.03   0.01
+19             24706.80  1733.0   286            0.03   0.01
+20              4339.40   792.0   161            0.05   0.02
+21              3841.53   822.0    79            0.06   0.01
+22             15571.51   419.0    67            0.07   0.02
+23              9705.30   759.5    46            0.04   0.01
+2025-09-07 04:59:31,108 - INFO -
+Performance by Day of Week:
+2025-09-07 04:59:31,112 - INFO -                     view_count               engagement_rate       
+                          mean  median count            mean median
+publish_day_of_week
+Friday                19581.41  1319.0  2183            0.03   0.02
+Monday                16781.33  1344.0  2010            0.03   0.02
+Saturday              18326.81  1573.0  1802            0.03   0.02
+Sunday                13491.56  1207.0  1784            0.03   0.02
+Thursday              20887.07  1131.0  2197            0.03   0.02
+Tuesday               18190.59  1173.0  2239            0.03   0.02
+Wednesday             13605.02   940.0  2897            0.03   0.02
+2025-09-07 04:59:32,286 - INFO - Saved publication timing analysis to ./eda_outputs/publication_timing_analysis.png
+2025-09-07 04:59:32,286 - INFO - ============================================================
+2025-09-07 04:59:32,286 - INFO - FEATURE IMPORTANCE ANALYSIS
+2025-09-07 04:59:32,286 - INFO - ============================================================        
+2025-09-07 04:59:32,292 - INFO - Feature Correlations with View Count:
+2025-09-07 04:59:32,293 - INFO -          feature  correlation
+      like_count     0.949632
+   week_1_growth     0.934187
+initial_velocity     0.754712
+   comment_count     0.375140
+    publish_hour     0.063095
+duration_seconds     0.049193
+    comment_rate    -0.026365
+   publish_month    -0.017423
+ engagement_rate    -0.016527
+       like_rate    -0.010382
+ peak_growth_day    -0.004824
+    total_growth          NaN
