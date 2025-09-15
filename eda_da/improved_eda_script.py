@@ -46,8 +46,8 @@ def parse_arguments():
     parser.add_argument(
         '--output-dir',
         type=str,
-        default='./eda_outputs',
-        help='Directory to save output files (default: ./eda_outputs)'
+        default='./eda_da/eda_outputs',
+        help='Directory to save output files (default: ./eda_da/eda_outputs)'
     )
     parser.add_argument(
         '--sample-size',

@@ -1,22 +1,22 @@
 # ViewTrendsSL EDA Summary Report
-Generated on: 2025-09-07 04:59:32
+Generated on: 2025-09-16 03:41:24
 
 ## Dataset Overview
-- Total videos: 15,112
-- Date range: 2025-08-06 01:16:25 to 2025-09-04 01:17:34
-- Shorts: 4,563 (30.2%)
-- Long-form: 10,549 (69.8%)
+- Total videos: 20,308
+- Date range: 2025-08-06 01:16:25 to 2025-09-14 01:20:04
+- Shorts: 6,264 (30.8%)
+- Long-form: 14,044 (69.2%)
 
 ## Performance Metrics
-- Average views: 17,179
-- Median views: 1,201
-- Average engagement rate: 0.0276
-- Top 1% view threshold: 286,962
+- Average views: 18,069
+- Median views: 1,241
+- Average engagement rate: 0.0270
+- Top 1% view threshold: 296,056
 
 ## Shorts vs Long-form Comparison
-- Shorts average views: 10,979
-- Long-form average views: 19,860
-- Performance ratio (Long-form/Shorts): 1.81
+- Shorts average views: 11,315
+- Long-form average views: 21,081
+- Performance ratio (Long-form/Shorts): 1.86
 
 ## Key Insights
 - Dual-model architecture is validated by distinct performance patterns
