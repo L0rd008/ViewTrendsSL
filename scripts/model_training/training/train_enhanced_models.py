@@ -228,217 +228,221 @@ class EnhancedModelTrainer:
         return preprocessor
     
     def train_model_for_target(
-        self, 
-        X: pd.DataFrame, 
-        y: pd.Series, 
-        target_name: str,
-        model_type: str = 'xgboost'
-    ) -> Tuple[Pipeline, Dict[str, Any]]:
-        """
-        Train a model for a specific target variable.
-        
-        Args:
-            X: Features DataFrame
-            y: Target Series
-            target_name: Name of target variable
-            model_type: Type of model to train
+            self, 
+            X_train: pd.DataFrame, 
+            y_train: pd.Series,
+            X_val: pd.DataFrame,
+            y_val: pd.Series,
+            target_name: str,
+            model_type: str = 'xgboost'
+        ) -> Tuple[Pipeline, Dict[str, Any]]:
+            """
+            Train a model for a specific target variable using pre-split data.
             
-        Returns:
-            Tuple of (trained_pipeline, metrics_dict)
-        """
-        logger.info(f"Training {model_type} model for {target_name}...")
-        
-        # Create preprocessor
-        preprocessor = self.create_preprocessor(X, self.feature_info)
-        
-        # Select model
-        if model_type == 'xgboost':
-            model = xgb.XGBRegressor(
-                n_estimators=self.config.get('n_estimators', 100),
-                max_depth=self.config.get('max_depth', 6),
-                learning_rate=self.config.get('learning_rate', 0.1),
-                subsample=self.config.get('subsample', 0.8),
-                colsample_bytree=self.config.get('colsample_bytree', 0.8),
-                random_state=self.config.get('random_state', 42),
-                n_jobs=-1
-            )
-        elif model_type == 'random_forest':
-            model = RandomForestRegressor(
-                n_estimators=self.config.get('n_estimators', 100),
-                max_depth=self.config.get('max_depth', 10),
-                random_state=self.config.get('random_state', 42),
-                n_jobs=-1
-            )
-        elif model_type == 'linear':
-            model = LinearRegression()
-        else:
-            raise ValueError(f"Unknown model type: {model_type}")
-        
-        # Create pipeline
-        pipeline = Pipeline([
-            ('preprocessor', preprocessor),
-            ('model', model)
-        ])
-        
-        # Split data for training and validation
-        X_train, X_val, y_train, y_val = train_test_split(
-            X, y, 
-            test_size=self.config.get('val_size', 0.2),
-            random_state=self.config.get('random_state', 42)
-        )
-        
-        # Train model
-        pipeline.fit(X_train, y_train)
-        
-        # Make predictions
-        y_train_pred = pipeline.predict(X_train)
-        y_val_pred = pipeline.predict(X_val)
-        
-        # Calculate metrics
-        metrics = {
-            'train_mae': mean_absolute_error(y_train, y_train_pred),
-            'train_mse': mean_squared_error(y_train, y_train_pred),
-            'train_rmse': np.sqrt(mean_squared_error(y_train, y_train_pred)),
-            'train_r2': r2_score(y_train, y_train_pred),
-            'val_mae': mean_absolute_error(y_val, y_val_pred),
-            'val_mse': mean_squared_error(y_val, y_val_pred),
-            'val_rmse': np.sqrt(mean_squared_error(y_val, y_val_pred)),
-            'val_r2': r2_score(y_val, y_val_pred),
-            'train_samples': len(X_train),
-            'val_samples': len(X_val)
-        }
-        
-        # Calculate MAPE (Mean Absolute Percentage Error)
-        def calculate_mape(y_true, y_pred):
-            return np.mean(np.abs((y_true - y_pred) / np.maximum(y_true, 1))) * 100
-        
-        metrics['train_mape'] = calculate_mape(y_train, y_train_pred)
-        metrics['val_mape'] = calculate_mape(y_val, y_val_pred)
-        
-        logger.info(f"Model training completed for {target_name}")
-        logger.info(f"Validation MAPE: {metrics['val_mape']:.2f}%")
-        logger.info(f"Validation R²: {metrics['val_r2']:.4f}")
-        
-        return pipeline, metrics
+            Args:
+                X_train, y_train: Training features and target
+                X_val, y_val: Validation features and target
+                target_name: Name of target variable
+                model_type: Type of model to train
+                
+            Returns:
+                Tuple of (trained_pipeline, metrics_dict)
+            """
+            logger.info(f"Training {model_type} model for {target_name}...")
+            
+            # Create preprocessor based on the training data
+            preprocessor = self.create_preprocessor(X_train, self.feature_info)
+            
+            # Select model (model selection logic is unchanged)
+            if model_type == 'xgboost':
+                model = xgb.XGBRegressor(
+                    n_estimators=self.config.get('n_estimators', 100),
+                    max_depth=self.config.get('max_depth', 6),
+                    learning_rate=self.config.get('learning_rate', 0.1),
+                    subsample=self.config.get('subsample', 0.8),
+                    colsample_bytree=self.config.get('colsample_bytree', 0.8),
+                    random_state=self.config.get('random_state', 42),
+                    n_jobs=-1
+                )
+            
+            elif model_type == 'random_forest':
+                model = RandomForestRegressor(
+                    n_estimators=self.config.get('n_estimators', 100),
+                    max_depth=self.config.get('max_depth', 10),
+                    random_state=self.config.get('random_state', 42),
+                    n_jobs=-1
+                )
+            elif model_type == 'linear':
+                model = LinearRegression()
+            else:
+                raise ValueError(f"Unknown model type: {model_type}")
+            
+            # Create pipeline
+            pipeline = Pipeline([
+                ('preprocessor', preprocessor),
+                ('model', model)
+            ])
+            
+            
+            
+            # Train model on the entire training set
+            pipeline.fit(X_train, y_train)
+            
+            # Make predictions on both sets
+            y_train_pred = pipeline.predict(X_train)
+            y_val_pred = pipeline.predict(X_val)
+            
+            # Calculate metrics (metrics logic is unchanged)
+            metrics = {
+                'train_mae': mean_absolute_error(y_train, y_train_pred),
+                'train_mse': mean_squared_error(y_train, y_train_pred),
+                'train_rmse': np.sqrt(mean_squared_error(y_train, y_train_pred)),
+                'train_r2': r2_score(y_train, y_train_pred),
+                'val_mae': mean_absolute_error(y_val, y_val_pred),
+                'val_mse': mean_squared_error(y_val, y_val_pred),
+                'val_rmse': np.sqrt(mean_squared_error(y_val, y_val_pred)),
+                'val_r2': r2_score(y_val, y_val_pred),
+                'train_samples': len(X_train),
+                'val_samples': len(X_val)
+            }
+            
+            def calculate_mape(y_true, y_pred):
+                return np.mean(np.abs((y_true - y_pred) / np.maximum(y_true, 1))) * 100
+            
+            metrics['train_mape'] = calculate_mape(y_train, y_train_pred)
+            metrics['val_mape'] = calculate_mape(y_val, y_val_pred)
+            
+            logger.info(f"Model training completed for {target_name}")
+            logger.info(f"Validation MAPE: {metrics['val_mape']:.2f}%")
+            logger.info(f"Validation R²: {metrics['val_r2']:.4f}")
+            
+            return pipeline, metrics
     
     def train_separate_models_by_content_type(
-        self, 
-        features_df: pd.DataFrame, 
-        targets: Dict[str, pd.Series]
-    ) -> Dict[str, Any]:
-        """
-        Train separate models for Shorts and Long-form content.
-        
-        Args:
-            features_df: Features DataFrame
-            targets: Dictionary of target Series
+            self, 
+            features_df_train: pd.DataFrame, 
+            targets_train: Dict[str, pd.Series],
+            features_df_val: pd.DataFrame,
+            targets_val: Dict[str, pd.Series]
+        ) -> Dict[str, Any]:
+            """
+            Train separate models for Shorts and Long-form content using pre-split data.
             
-        Returns:
-            Training results dictionary
-        """
-        logger.info("Training separate models for Shorts and Long-form content...")
-        
-        results = {
-            'shorts_models': {},
-            'longform_models': {},
-            'shorts_metrics': {},
-            'longform_metrics': {},
-            'training_info': {}
-        }
-        
-        # Check if we have content type information
-        if 'is_short' not in features_df.columns:
-            logger.warning("No 'is_short' column found. Training unified models instead.")
-            return self.train_unified_models(features_df, targets)
-        
-        # Split data by content type
-        shorts_mask = features_df['is_short'] == True
-        longform_mask = features_df['is_short'] == False
-        
-        shorts_features = features_df[shorts_mask].copy()
-        longform_features = features_df[longform_mask].copy()
-        
-        logger.info(f"Shorts samples: {len(shorts_features)}")
-        logger.info(f"Long-form samples: {len(longform_features)}")
-        
-        # Train models for each target and content type
-        for target_name, target_series in targets.items():
-            logger.info(f"\nTraining models for target: {target_name}")
+            Args:
+                features_df_train, targets_train: Training data
+                features_df_val, targets_val: Validation data
+                
+            Returns:
+                Training results dictionary
+            """
+            logger.info("Training separate models for Shorts and Long-form content...")
             
-            # Shorts models
-            if len(shorts_features) >= self.config.get('min_samples', 50):
-                shorts_target = target_series[shorts_mask]
-                shorts_pipeline, shorts_metrics = self.train_model_for_target(
-                    shorts_features, shorts_target, f"{target_name}_shorts"
-                )
-                results['shorts_models'][target_name] = shorts_pipeline
-                results['shorts_metrics'][target_name] = shorts_metrics
-            else:
-                logger.warning(f"Insufficient Shorts samples for {target_name}: {len(shorts_features)}")
+            results = { 'shorts_models': {}, 'longform_models': {}, 'shorts_metrics': {}, 'longform_metrics': {}, 'training_info': {} }
             
-            # Long-form models
-            if len(longform_features) >= self.config.get('min_samples', 50):
-                longform_target = target_series[longform_mask]
-                longform_pipeline, longform_metrics = self.train_model_for_target(
-                    longform_features, longform_target, f"{target_name}_longform"
-                )
-                results['longform_models'][target_name] = longform_pipeline
-                results['longform_metrics'][target_name] = longform_metrics
-            else:
-                logger.warning(f"Insufficient Long-form samples for {target_name}: {len(longform_features)}")
-        
-        # Store training info
-        results['training_info'] = {
-            'total_samples': len(features_df),
-            'shorts_samples': len(shorts_features),
-            'longform_samples': len(longform_features),
-            'targets_trained': list(targets.keys()),
-            'training_timestamp': datetime.now().isoformat()
-        }
-        
-        return results
+            if 'is_short' not in features_df_train.columns:
+                logger.warning("No 'is_short' column found. Training unified models instead.")
+                return self.train_unified_models(features_df_train, targets_train, features_df_val, targets_val)
+            
+            # Split both train and validation sets by content type
+            shorts_mask_train = features_df_train['is_short'] == True
+            longform_mask_train = features_df_train['is_short'] == False
+            shorts_mask_val = features_df_val['is_short'] == True
+            longform_mask_val = features_df_val['is_short'] == False
+
+            shorts_features_train = features_df_train[shorts_mask_train].copy()
+            longform_features_train = features_df_train[longform_mask_train].copy()
+            shorts_features_val = features_df_val[shorts_mask_val].copy()
+            longform_features_val = features_df_val[longform_mask_val].copy()
+            
+            logger.info(f"Shorts samples - Train: {len(shorts_features_train)}, Val: {len(shorts_features_val)}")
+            logger.info(f"Long-form samples - Train: {len(longform_features_train)}, Val: {len(longform_features_val)}")
+            
+            for target_name, target_series_train in targets_train.items():
+                logger.info(f"\nTraining models for target: {target_name}")
+                target_series_val = targets_val[target_name]
+                
+                # Shorts models
+                if len(shorts_features_train) >= self.config.get('min_samples', 50):
+                    shorts_pipeline, shorts_metrics = self.train_model_for_target(
+                        shorts_features_train, target_series_train[shorts_mask_train],
+                        shorts_features_val, target_series_val[shorts_mask_val],
+                        f"{target_name}_shorts"
+                    )
+                    results['shorts_models'][target_name] = shorts_pipeline
+                    results['shorts_metrics'][target_name] = shorts_metrics
+                
+                # Long-form models
+                if len(longform_features_train) >= self.config.get('min_samples', 50):
+                    longform_pipeline, longform_metrics = self.train_model_for_target(
+                        longform_features_train, target_series_train[longform_mask_train],
+                        longform_features_val, target_series_val[longform_mask_val],
+                        f"{target_name}_longform"
+                    )
+                    results['longform_models'][target_name] = longform_pipeline
+                    results['longform_metrics'][target_name] = longform_metrics
+
+            results['training_info'] = {
+                'train_samples': len(features_df_train),
+                'val_samples': len(features_df_val),
+                'shorts_samples_train': len(shorts_features_train),
+                'longform_samples_train': len(longform_features_train),
+                'targets_trained': list(targets_train.keys()),
+                'training_timestamp': datetime.now().isoformat()
+            }
+            
+            return results
     
     def train_unified_models(
-        self, 
-        features_df: pd.DataFrame, 
-        targets: Dict[str, pd.Series]
-    ) -> Dict[str, Any]:
-        """
-        Train unified models for all content types.
-        
-        Args:
-            features_df: Features DataFrame
-            targets: Dictionary of target Series
+            self, 
+            features_df_train: pd.DataFrame, 
+            targets_train: Dict[str, pd.Series],
+            features_df_val: pd.DataFrame,
+            targets_val: Dict[str, pd.Series]
+        ) -> Dict[str, Any]:
+            """
+            Train unified models for all content types using pre-split data.
             
-        Returns:
-            Training results dictionary
-        """
-        logger.info("Training unified models for all content types...")
-        
-        results = {
-            'unified_models': {},
-            'unified_metrics': {},
-            'training_info': {}
-        }
-        
-        # Train models for each target
-        for target_name, target_series in targets.items():
-            logger.info(f"\nTraining unified model for target: {target_name}")
+            Args:
+                features_df_train, targets_train: Training data
+                features_df_val, targets_val: Validation data
+                
+            Returns:
+                Training results dictionary
+            """
+            logger.info("Training unified models for all content types...")
             
-            pipeline, metrics = self.train_model_for_target(
-                features_df, target_series, f"{target_name}_unified"
-            )
-            results['unified_models'][target_name] = pipeline
-            results['unified_metrics'][target_name] = metrics
-        
-        # Store training info
-        results['training_info'] = {
-            'total_samples': len(features_df),
-            'targets_trained': list(targets.keys()),
-            'training_timestamp': datetime.now().isoformat()
-        }
-        
-        return results
+            results = {
+                'unified_models': {},
+                'unified_metrics': {},
+                'training_info': {}
+            }
+            
+            # Train models for each target using the pre-split data
+            for target_name, target_series_train in targets_train.items():
+                logger.info(f"\nTraining unified model for target: {target_name}")
+                
+                # Get the corresponding validation target series
+                target_series_val = targets_val[target_name]
+                
+                pipeline, metrics = self.train_model_for_target(
+                    X_train=features_df_train, 
+                    y_train=target_series_train,
+                    X_val=features_df_val,
+                    y_val=target_series_val,
+                    target_name=f"{target_name}_unified"
+                )
+                results['unified_models'][target_name] = pipeline
+                results['unified_metrics'][target_name] = metrics
+            
+            # Store training info
+            results['training_info'] = {
+                'train_samples': len(features_df_train),
+                'val_samples': len(features_df_val),
+                'targets_trained': list(targets_train.keys()),
+                'training_timestamp': datetime.now().isoformat()
+            }
+            
+            return results
     
     def save_models(self, results: Dict[str, Any]) -> None:
         """
@@ -498,153 +502,157 @@ class EnhancedModelTrainer:
         logger.info(f"Saved training results: {results_path}")
     
     def generate_training_report(self, results: Dict[str, Any]) -> str:
-        """
-        Generate a comprehensive training report.
-        
-        Args:
-            results: Training results dictionary
+            """
+            Generate a comprehensive training report.
             
-        Returns:
-            Report string
-        """
-        logger.info("Generating training report...")
-        
-        report_lines = []
-        report_lines.append("=" * 80)
-        report_lines.append("VIEWTRENDSSL MODEL TRAINING REPORT")
-        report_lines.append("=" * 80)
-        report_lines.append("")
-        
-        # Training info
-        training_info = results.get('training_info', {})
-        report_lines.append("TRAINING SUMMARY:")
-        report_lines.append(f"  Total samples: {training_info.get('total_samples', 'N/A'):,}")
-        report_lines.append(f"  Shorts samples: {training_info.get('shorts_samples', 'N/A'):,}")
-        report_lines.append(f"  Long-form samples: {training_info.get('longform_samples', 'N/A'):,}")
-        report_lines.append(f"  Targets trained: {', '.join(training_info.get('targets_trained', []))}")
-        report_lines.append(f"  Training timestamp: {training_info.get('training_timestamp', 'N/A')}")
-        report_lines.append("")
-        
-        # Shorts model performance
-        if 'shorts_metrics' in results and results['shorts_metrics']:
-            report_lines.append("SHORTS MODEL PERFORMANCE:")
-            for target, metrics in results['shorts_metrics'].items():
-                report_lines.append(f"  {target}:")
-                report_lines.append(f"    Validation MAPE: {metrics.get('val_mape', 0):.2f}%")
-                report_lines.append(f"    Validation R²: {metrics.get('val_r2', 0):.4f}")
-                report_lines.append(f"    Validation RMSE: {metrics.get('val_rmse', 0):.2f}")
-                report_lines.append(f"    Training samples: {metrics.get('train_samples', 0):,}")
-                report_lines.append(f"    Validation samples: {metrics.get('val_samples', 0):,}")
+            Args:
+                results: Training results dictionary
+                
+            Returns:
+                Report string
+            """
+            logger.info("Generating training report...")
+            
+            report_lines = []
+            report_lines.append("=" * 80)
+            report_lines.append("VIEWTRENDSSL MODEL TRAINING REPORT")
+            report_lines.append("=" * 80)
             report_lines.append("")
-        
-        # Long-form model performance
-        if 'longform_metrics' in results and results['longform_metrics']:
-            report_lines.append("LONG-FORM MODEL PERFORMANCE:")
-            for target, metrics in results['longform_metrics'].items():
-                report_lines.append(f"  {target}:")
-                report_lines.append(f"    Validation MAPE: {metrics.get('val_mape', 0):.2f}%")
-                report_lines.append(f"    Validation R²: {metrics.get('val_r2', 0):.4f}")
-                report_lines.append(f"    Validation RMSE: {metrics.get('val_rmse', 0):.2f}")
-                report_lines.append(f"    Training samples: {metrics.get('train_samples', 0):,}")
-                report_lines.append(f"    Validation samples: {metrics.get('val_samples', 0):,}")
+            
+            # --- THIS IS THE FIX ---
+            # Training info
+            training_info = results.get('training_info', {})
+            report_lines.append("TRAINING SUMMARY:")
+            report_lines.append(f"  Training samples: {training_info.get('train_samples', 0):,}")
+            report_lines.append(f"  Validation samples: {training_info.get('val_samples', 0):,}")
+            report_lines.append(f"  - Shorts samples (train): {training_info.get('shorts_samples_train', 0):,}")
+            report_lines.append(f"  - Long-form samples (train): {training_info.get('longform_samples_train', 0):,}")
+            report_lines.append(f"  Targets trained: {', '.join(training_info.get('targets_trained', []))}")
+            report_lines.append(f"  Training timestamp: {training_info.get('training_timestamp', 'N/A')}")
             report_lines.append("")
-        
-        # Unified model performance
-        if 'unified_metrics' in results and results['unified_metrics']:
-            report_lines.append("UNIFIED MODEL PERFORMANCE:")
-            for target, metrics in results['unified_metrics'].items():
-                report_lines.append(f"  {target}:")
-                report_lines.append(f"    Validation MAPE: {metrics.get('val_mape', 0):.2f}%")
-                report_lines.append(f"    Validation R²: {metrics.get('val_r2', 0):.4f}")
-                report_lines.append(f"    Validation RMSE: {metrics.get('val_rmse', 0):.2f}")
-                report_lines.append(f"    Training samples: {metrics.get('train_samples', 0):,}")
-                report_lines.append(f"    Validation samples: {metrics.get('val_samples', 0):,}")
-            report_lines.append("")
-        
-        report_lines.append("=" * 80)
-        
-        return "\n".join(report_lines)
+            
+            # Shorts model performance
+            if 'shorts_metrics' in results and results['shorts_metrics']:
+                report_lines.append("SHORTS MODEL PERFORMANCE:")
+                for target, metrics in results['shorts_metrics'].items():
+                    report_lines.append(f"  {target}:")
+                    report_lines.append(f"    Validation MAPE: {metrics.get('val_mape', 0):.2f}%")
+                    report_lines.append(f"    Validation R²: {metrics.get('val_r2', 0):.4f}")
+                    report_lines.append(f"    Validation RMSE: {metrics.get('val_rmse', 0):.2f}")
+                    report_lines.append(f"    Training samples: {metrics.get('train_samples', 0):,}")
+                    report_lines.append(f"    Validation samples: {metrics.get('val_samples', 0):,}")
+                report_lines.append("")
+            
+            # Long-form model performance
+            if 'longform_metrics' in results and results['longform_metrics']:
+                report_lines.append("LONG-FORM MODEL PERFORMANCE:")
+                for target, metrics in results['longform_metrics'].items():
+                    report_lines.append(f"  {target}:")
+                    report_lines.append(f"    Validation MAPE: {metrics.get('val_mape', 0):.2f}%")
+                    report_lines.append(f"    Validation R²: {metrics.get('val_r2', 0):.4f}")
+                    report_lines.append(f"    Validation RMSE: {metrics.get('val_rmse', 0):.2f}")
+                    report_lines.append(f"    Training samples: {metrics.get('train_samples', 0):,}")
+                    report_lines.append(f"    Validation samples: {metrics.get('val_samples', 0):,}")
+                report_lines.append("")
+            
+            # Unified model performance
+            if 'unified_metrics' in results and results['unified_metrics']:
+                report_lines.append("UNIFIED MODEL PERFORMANCE:")
+                for target, metrics in results['unified_metrics'].items():
+                    report_lines.append(f"  {target}:")
+                    report_lines.append(f"    Validation MAPE: {metrics.get('val_mape', 0):.2f}%")
+                    report_lines.append(f"    Validation R²: {metrics.get('val_r2', 0):.4f}")
+                    report_lines.append(f"    Validation RMSE: {metrics.get('val_rmse', 0):.2f}")
+                    report_lines.append(f"    Training samples: {metrics.get('train_samples', 0):,}")
+                    report_lines.append(f"    Validation samples: {metrics.get('val_samples', 0):,}")
+                report_lines.append("")
+            
+            report_lines.append("=" * 80)
+            
+            return "\n".join(report_lines)
     
     def run_complete_training_pipeline(
-        self, 
-        data_path: str, 
-        feature_info_path: Optional[str] = None
-    ) -> Dict[str, Any]:
-        """
-        Run the complete model training pipeline.
-        
-        Args:
-            data_path: Path to processed training data
-            feature_info_path: Path to feature information JSON
+            self, 
+            train_data_path: str, 
+            val_data_path: str,
+            feature_info_path: Optional[str] = None
+        ) -> Dict[str, Any]:
+            """
+            Run the complete model training pipeline using pre-split data.
             
-        Returns:
-            Training results dictionary
-        """
-        logger.info("Starting complete model training pipeline...")
-        start_time = datetime.now()
-        
-        try:
-            # Load processed data
-            df = self.load_processed_data(data_path)
+            Args:
+                train_data_path: Path to processed training data
+                val_data_path: Path to processed validation data
+                feature_info_path: Path to feature information JSON
+                
+            Returns:
+                Training results dictionary
+            """
+            logger.info("Starting complete model training pipeline...")
+            start_time = datetime.now()
             
-            # Load feature information
-            if feature_info_path:
-                self.feature_info = self.load_feature_info(feature_info_path)
-            
-            # Prepare features and targets
-            features_df, targets = self.prepare_features_and_targets(df)
-            
-            # Train models
-            if self.config.get('separate_by_content_type', True):
-                results = self.train_separate_models_by_content_type(features_df, targets)
-            else:
-                results = self.train_unified_models(features_df, targets)
-            
-            # Save models
-            if self.config.get('save_models', True):
-                self.save_models(results)
-            
-            # Save results
-            if self.config.get('save_results', True):
-                self.save_results(results)
-            
-            # Generate and save report
-            report = self.generate_training_report(results)
-            
-            # Save report to file
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            report_path = self.results_dir / f'training_report_{timestamp}.txt'
-            with open(report_path, 'w') as f:
-                f.write(report)
-            
-            logger.info(f"Training report saved: {report_path}")
-            
-            # Print report
-            print("\n" + report)
-            
-            # Add pipeline info to results
-            end_time = datetime.now()
-            processing_duration = (end_time - start_time).total_seconds()
-            
-            results['pipeline_info'] = {
-                'pipeline_status': 'completed',
-                'processing_duration_seconds': processing_duration,
-                'started_at': start_time.isoformat(),
-                'completed_at': end_time.isoformat(),
-                'input_file': data_path,
-                'feature_info_file': feature_info_path,
-                'models_directory': str(self.models_dir),
-                'results_directory': str(self.results_dir)
-            }
-            
-            logger.info(f"Model training completed in {processing_duration:.1f} seconds")
-            
-            return results
-            
-        except Exception as e:
-            logger.error(f"Model training pipeline failed: {e}")
-            raise
+            try:
+                # Load both training and validation data
+                df_train = self.load_processed_data(train_data_path)
+                df_val = self.load_processed_data(val_data_path)
+                
+                if feature_info_path:
+                    self.feature_info = self.load_feature_info(feature_info_path)
+                
+                # Prepare features and targets for both sets
+                features_df_train, targets_train = self.prepare_features_and_targets(df_train)
+                features_df_val, targets_val = self.prepare_features_and_targets(df_val)
+                
+                # Train models
+                if self.config.get('separate_by_content_type', True):
+                    results = self.train_separate_models_by_content_type(
+                        features_df_train, targets_train, features_df_val, targets_val
+                    )
+                else:
+                    # Note: You would also need to update `train_unified_models` similarly if you use it
+                    results = self.train_unified_models(
+                        features_df_train, targets_train, features_df_val, targets_val
+                    )
 
+                # ... (rest of the function for saving and reporting is the same)
+                if self.config.get('save_models', True):
+                    self.save_models(results)
+                
+                if self.config.get('save_results', True):
+                    self.save_results(results)
+                
+                report = self.generate_training_report(results)
+                
+                timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                report_path = self.results_dir / f'training_report_{timestamp}.txt'
+                with open(report_path, 'w') as f:
+                    f.write(report)
+                
+                logger.info(f"Training report saved: {report_path}")
+                print("\n" + report)
+                
+                end_time = datetime.now()
+                processing_duration = (end_time - start_time).total_seconds()
+                
+                results['pipeline_info'] = {
+                    'pipeline_status': 'completed',
+                    'processing_duration_seconds': processing_duration,
+                    'started_at': start_time.isoformat(),
+                    'completed_at': end_time.isoformat(),
+                    'train_input_file': train_data_path,
+                    'val_input_file': val_data_path,
+                    'feature_info_file': feature_info_path,
+                    'models_directory': str(self.models_dir),
+                    'results_directory': str(self.results_dir)
+                }
+                
+                logger.info(f"Model training completed in {processing_duration:.1f} seconds")
+                
+                return results
+                
+            except Exception as e:
+                logger.error(f"Model training pipeline failed: {e}")
+                raise
 
 def load_config(config_path: Optional[str] = None) -> Dict[str, Any]:
     """Load configuration from file or use defaults."""
@@ -680,14 +688,22 @@ def load_config(config_path: Optional[str] = None) -> Dict[str, Any]:
     
     return default_config
 
-
 def main():
     """Main training script entry point."""
     parser = argparse.ArgumentParser(description='Train ViewTrendsSL models using processed CSV data')
     
+    # UPDATED: Changed to specific, required arguments
     parser.add_argument(
-        'data_path',
-        help='Path to processed training data CSV file'
+        '--train-data',
+        type=str,
+        required=True,
+        help='Path to processed training data CSV file (e.g., train_data.csv)'
+    )
+    parser.add_argument(
+        '--val-data',
+        type=str,
+        required=True,
+        help='Path to processed validation data CSV file (e.g., val_data.csv)'
     )
     
     parser.add_argument(
@@ -743,18 +759,20 @@ def main():
         if args.unified:
             config['separate_by_content_type'] = False
         
-        # Validate input file
-        if not os.path.exists(args.data_path):
-            logger.error(f"Input file not found: {args.data_path}")
-            return 1
+        # Validate input files
+        for path in [args.train_data, args.val_data]:
+            if not os.path.exists(path):
+                logger.error(f"Input file not found: {path}")
+                return 1
         
         # Initialize trainer
         trainer = EnhancedModelTrainer(config)
         
-        # Run training pipeline
+        # Run training pipeline with BOTH paths
         results = trainer.run_complete_training_pipeline(
-            args.data_path, 
-            args.feature_info
+            train_data_path=args.train_data, 
+            val_data_path=args.val_data,
+            feature_info_path=args.feature_info
         )
         
         logger.info("Model training completed successfully!")
@@ -766,7 +784,6 @@ def main():
     except Exception as e:
         logger.error(f"Model training failed: {e}")
         return 1
-
 
 if __name__ == '__main__':
     exit(main())

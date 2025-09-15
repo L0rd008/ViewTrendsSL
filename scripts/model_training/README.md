@@ -330,7 +330,7 @@ Retrain models when:
 python scripts/model_training/preprocessing/prepare_data.py data/raw/latest_*.csv
 
 # 2. Train models
-python scripts/model_training/training/train_models.py
+python scripts\model_training\training\train_enhanced_models.py --train-data data\processed\training\train_data.csv --val-data data\processed\validation\val_data.csv --feature-info data\processed\features\feature_info.json
 
 # 3. Evaluate performance
 python scripts/model_training/evaluation/evaluate_models.py --test-data data/processed/test_data.csv

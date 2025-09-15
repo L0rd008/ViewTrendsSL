@@ -38,19 +38,28 @@ class EnhancedCSVProcessor:
     """Enhanced processor for ViewTrendsSL CSV data with time-series features."""
     
     def __init__(self, config: Dict[str, Any]):
-        """
-        Initialize the enhanced CSV processor.
-        
-        Args:
-            config: Configuration dictionary
-        """
-        self.config = config
-        
-        # Create output directories
-        self.output_dir = Path(config.get('output_dir', 'data/processed'))
-        self.output_dir.mkdir(parents=True, exist_ok=True)
-        
-        logger.info(f"Enhanced CSV processor initialized. Output: {self.output_dir}")
+            """
+            Initialize the enhanced CSV processor.
+            
+            Args:
+                config: Configuration dictionary
+            """
+            self.config = config
+            
+            # Define the base output directory AND STORE IT AS AN ATTRIBUTE
+            self.base_output_dir = Path(config.get('output_dir', 'data/processed'))
+            
+            # Define specific directories for different outputs
+            self.features_dir = self.base_output_dir / 'features'
+            self.training_dir = self.base_output_dir / 'training'
+            self.validation_dir = self.base_output_dir / 'validation'
+            
+            # Create all output directories
+            self.features_dir.mkdir(parents=True, exist_ok=True)
+            self.training_dir.mkdir(parents=True, exist_ok=True)
+            self.validation_dir.mkdir(parents=True, exist_ok=True)
+            
+            logger.info(f"Enhanced CSV processor initialized. Output will be saved in subdirectories of {self.base_output_dir}")
     
     def load_csv_data(self, csv_path: str) -> pd.DataFrame:
         """
@@ -658,59 +667,58 @@ class EnhancedCSVProcessor:
         return train_df, val_df, test_df
     
     def save_processed_data(
-        self, 
-        train_df: pd.DataFrame, 
-        val_df: pd.DataFrame, 
-        test_df: pd.DataFrame
-    ):
-        """
-        Save processed data to files.
-        
-        Args:
-            train_df: Training data
-            val_df: Validation data
-            test_df: Test data
-        """
-        logger.info("Saving processed data...")
-        
-        # Save individual splits
-        train_df.to_csv(self.output_dir / 'train_data.csv', index=False)
-        val_df.to_csv(self.output_dir / 'val_data.csv', index=False)
-        test_df.to_csv(self.output_dir / 'test_data.csv', index=False)
-        
-        # Save combined training data (train + val) for model training
-        combined_train = pd.concat([train_df, val_df], ignore_index=True)
-        combined_train.to_csv(self.output_dir / 'training_data.csv', index=False)
-        
-        # Save feature information
-        feature_info = {
-            'total_features': len(train_df.columns),
-            'feature_names': list(train_df.columns),
-            'target_variables': ['views_at_24h', 'views_at_7d', 'views_at_30d'],
-            'categorical_features': self._identify_categorical_features(train_df),
-            'numerical_features': self._identify_numerical_features(train_df),
-            'time_series_features': self._identify_time_series_features(train_df),
-            'content_features': self._identify_content_features(train_df),
-            'engagement_features': self._identify_engagement_features(train_df),
-            'channel_features': self._identify_channel_features(train_df),
-            'created_at': datetime.now().isoformat(),
-            'data_splits': {
-                'train_samples': len(train_df),
-                'val_samples': len(val_df),
-                'test_samples': len(test_df),
-                'total_samples': len(train_df) + len(val_df) + len(test_df),
-                'shorts_samples': int((train_df['is_short'] == True).sum() + (val_df['is_short'] == True).sum() + (test_df['is_short'] == True).sum()),
-                'longform_samples': int((train_df['is_short'] == False).sum() + (val_df['is_short'] == False).sum() + (test_df['is_short'] == False).sum())
+            self, 
+            train_df: pd.DataFrame, 
+            val_df: pd.DataFrame, 
+            test_df: pd.DataFrame
+        ):
+            """
+            Save processed data to files in their respective folders.
+            
+            Args:
+                train_df: Training data
+                val_df: Validation data
+                test_df: Test data
+            """
+            logger.info("Saving processed data into structured directories...")
+            
+            # Save training, validation, and test splits
+            train_df.to_csv(self.training_dir / 'train_data.csv', index=False)
+            val_df.to_csv(self.validation_dir / 'val_data.csv', index=False)
+            test_df.to_csv(self.validation_dir / 'test_data.csv', index=False)
+            
+            # Save combined training data (train + val) for final model training
+            combined_train = pd.concat([train_df, val_df], ignore_index=True)
+            combined_train.to_csv(self.training_dir / 'training_data.csv', index=False)
+            
+            # Save feature information and reports to the features directory
+            feature_info = {
+                'total_features': len(train_df.columns),
+                'feature_names': list(train_df.columns),
+                'target_variables': ['views_at_24h', 'views_at_7d', 'views_at_30d'],
+                'categorical_features': self._identify_categorical_features(train_df),
+                'numerical_features': self._identify_numerical_features(train_df),
+                'time_series_features': self._identify_time_series_features(train_df),
+                'content_features': self._identify_content_features(train_df),
+                'engagement_features': self._identify_engagement_features(train_df),
+                'channel_features': self._identify_channel_features(train_df),
+                'created_at': datetime.now().isoformat(),
+                'data_splits': {
+                    'train_samples': len(train_df),
+                    'val_samples': len(val_df),
+                    'test_samples': len(test_df),
+                    'total_samples': len(train_df) + len(val_df) + len(test_df),
+                    'shorts_samples': int((train_df['is_short'] == True).sum() + (val_df['is_short'] == True).sum() + (test_df['is_short'] == True).sum()),
+                    'longform_samples': int((train_df['is_short'] == False).sum() + (val_df['is_short'] == False).sum() + (test_df['is_short'] == False).sum())
+                }
             }
-        }
-        
-        with open(self.output_dir / 'feature_info.json', 'w') as f:
-            json.dump(feature_info, f, indent=2)
-        
-        logger.info(f"Processed data saved to {self.output_dir}")
-        logger.info(f"Total features: {feature_info['total_features']}")
-        logger.info(f"Shorts samples: {feature_info['data_splits']['shorts_samples']}")
-        logger.info(f"Long-form samples: {feature_info['data_splits']['longform_samples']}")
+            
+            with open(self.features_dir / 'feature_info.json', 'w') as f:
+                json.dump(feature_info, f, indent=2)
+            
+            logger.info(f"Processed data saved. Training data in: {self.training_dir}")
+            logger.info(f"Validation/Test data in: {self.validation_dir}")
+            logger.info(f"Feature reports in: {self.features_dir}")
     
     def _identify_categorical_features(self, df: pd.DataFrame) -> List[str]:
         """Identify categorical features in the DataFrame."""
@@ -870,73 +878,74 @@ class EnhancedCSVProcessor:
         return report
     
     def run_complete_pipeline(self, csv_path: str) -> Dict[str, Any]:
-        """
-        Run the complete CSV processing pipeline.
-        
-        Args:
-            csv_path: Path to the CSV file
+            """
+            Run the complete CSV processing pipeline.
             
-        Returns:
-            Pipeline results dictionary
-        """
-        logger.info("Starting complete CSV processing pipeline...")
-        start_time = datetime.now()
-        
-        try:
-            # Load CSV data
-            raw_data = self.load_csv_data(csv_path)
+            Args:
+                csv_path: Path to the CSV file
+                
+            Returns:
+                Pipeline results dictionary
+            """
+            logger.info("Starting complete CSV processing pipeline...")
+            start_time = datetime.now()
             
-            # Clean and standardize data
-            clean_data = self.clean_and_standardize_data(raw_data)
-            
-            # Extract time-series features
-            ts_data = self.extract_time_series_features(clean_data)
-            
-            # Extract content features
-            content_data = self.extract_content_features(ts_data)
-            
-            # Extract engagement features
-            engagement_data = self.extract_engagement_features(content_data)
-            
-            # Create channel features
-            final_data = self.create_channel_features(engagement_data)
-            
-            # Split data
-            train_df, val_df, test_df = self.split_data(final_data)
-            
-            # Save processed data
-            self.save_processed_data(train_df, val_df, test_df)
-            
-            # Generate comprehensive report
-            data_report = self.generate_comprehensive_report(final_data)
-            
-            # Save report
-            with open(self.output_dir / 'processing_report.json', 'w') as f:
-                json.dump(data_report, f, indent=2, default=str)
-            
-            # Compile results
-            end_time = datetime.now()
-            processing_duration = (end_time - start_time).total_seconds()
-            
-            results = {
-                'pipeline_status': 'completed',
-                'processing_duration_seconds': processing_duration,
-                'started_at': start_time.isoformat(),
-                'completed_at': end_time.isoformat(),
-                'input_file': csv_path,
-                'output_directory': str(self.output_dir),
-                'data_report': data_report,
-                'config_used': self.config
-            }
-            
-            logger.info(f"CSV processing completed in {processing_duration:.1f} seconds")
-            logger.info(f"Final dataset: {len(final_data)} records with {len(final_data.columns)} features")
-            
-            return results
-            
-        except Exception as e:
-            logger.error(f"CSV processing pipeline failed: {e}")
-            raise
+            try:
+                # Load CSV data
+                raw_data = self.load_csv_data(csv_path)
+                
+                # Clean and standardize data
+                clean_data = self.clean_and_standardize_data(raw_data)
+                
+                # Extract time-series features
+                ts_data = self.extract_time_series_features(clean_data)
+                
+                # Extract content features
+                content_data = self.extract_content_features(ts_data)
+                
+                # Extract engagement features
+                engagement_data = self.extract_engagement_features(content_data)
+                
+                # Create channel features
+                final_data = self.create_channel_features(engagement_data)
+                
+                # Split data
+                train_df, val_df, test_df = self.split_data(final_data)
+                
+                # Save processed data
+                self.save_processed_data(train_df, val_df, test_df)
+                
+                # Generate comprehensive report
+                data_report = self.generate_comprehensive_report(final_data)
+                
+                # Save report to the features directory
+                with open(self.features_dir / 'processing_report.json', 'w') as f:
+                    json.dump(data_report, f, indent=2, default=str)
+                
+                # Compile results
+                end_time = datetime.now()
+                processing_duration = (end_time - start_time).total_seconds()
+                
+                results = {
+                    'pipeline_status': 'completed',
+                    'processing_duration_seconds': processing_duration,
+                    'started_at': start_time.isoformat(),
+                    'completed_at': end_time.isoformat(),
+                    'input_file': csv_path,
+                    # THIS IS THE FINAL FIX: Use self.base_output_dir
+                    'output_directory': str(self.base_output_dir),
+                    'data_report': data_report,
+                    'config_used': self.config
+                }
+                
+                logger.info(f"CSV processing completed in {processing_duration:.1f} seconds")
+                logger.info(f"Final dataset: {len(final_data)} records with {len(final_data.columns)} features")
+                
+                return results
+                
+            except Exception as e:
+                logger.error(f"CSV processing pipeline failed: {e}")
+                raise
 
 
 def load_config(config_path: Optional[str] = None) -> Dict[str, Any]:
