@@ -1039,7 +1039,7 @@ def main():
     except Exception as e:
         logger.error(f"CSV processing failed: {e}")
         return 1
-
+    
 
 if __name__ == '__main__':
     exit(main())

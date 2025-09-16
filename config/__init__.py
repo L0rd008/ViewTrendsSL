@@ -12,7 +12,7 @@ import os
 from typing import Dict, Any, Optional
 from .api.api_config import APIConfig
 from .api.cors_config import CORSConfig
-from .api.rate_limiting_config import RateLimitingConfig
+from .api.rate_limiting_config import RateLimitConfig
 from .api.authentication_config import AuthenticationConfig
 from .database.database_config import DatabaseConfig
 from .database.sqlite_config import SQLiteConfig
@@ -54,7 +54,7 @@ class Config:
     @classmethod
     def get_rate_limiting_config(cls) -> Dict[str, Any]:
         """Get rate limiting configuration."""
-        return RateLimitingConfig.get_rate_limiting_config()
+        return RateLimitConfig.get_rate_limiting_config()
     
     @classmethod
     def get_authentication_config(cls) -> Dict[str, Any]:

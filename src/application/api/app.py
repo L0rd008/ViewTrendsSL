@@ -18,7 +18,7 @@ from datetime import timedelta
 # Import configuration
 from config.api.api_config import APIConfig
 from config.api.cors_config import CORSConfig
-from config.api.authentication_config import AuthConfig
+from config.api.authentication_config import AuthenticationConfig
 from config.database.database_config import DatabaseConfig
 
 # Import blueprints
@@ -51,9 +51,9 @@ def create_app(config_name='development'):
     app.config.from_object(APIConfig)
     
     # Configure JWT
-    app.config['JWT_SECRET_KEY'] = AuthConfig.JWT_SECRET_KEY
-    app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(hours=AuthConfig.JWT_ACCESS_TOKEN_EXPIRES_HOURS)
-    app.config['JWT_REFRESH_TOKEN_EXPIRES'] = timedelta(days=AuthConfig.JWT_REFRESH_TOKEN_EXPIRES_DAYS)
+    app.config['JWT_SECRET_KEY'] = AuthenticationConfig.JWT_SECRET_KEY
+    app.config['JWT_ACCESS_TOKEN_EXPIRES'] = AuthenticationConfig.JWT_ACCESS_TOKEN_EXPIRES
+    app.config['JWT_REFRESH_TOKEN_EXPIRES'] = AuthenticationConfig.JWT_REFRESH_TOKEN_EXPIRES
     
     # Initialize extensions
     jwt = JWTManager(app)

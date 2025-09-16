@@ -30,6 +30,16 @@ def get_current_time_sl() -> datetime:
     return datetime.now(SL_TIMEZONE)
 
 
+def get_current_utc_time() -> datetime:
+    """
+    Get current time in UTC timezone.
+    
+    Returns:
+        Current datetime in UTC timezone
+    """
+    return datetime.now(timezone.utc)
+
+
 def convert_to_sl_time(dt: datetime) -> datetime:
     """
     Convert datetime to Sri Lanka timezone.
